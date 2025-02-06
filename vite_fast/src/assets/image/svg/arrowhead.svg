@@ -1,0 +1,11 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 20 17.320508"
+  :style="arrow.headStyle"
+>
+  <polygon
+    class="cls-1"
+    points="10 0 0 17.320508 20 17.320508"
+    fill="#231815"
+  />
+</svg>

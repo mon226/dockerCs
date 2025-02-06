@@ -1,0 +1,121 @@
+@use "./color" as c; 
+
+#dashboard {
+  width: 100%;
+  height: 90vh;
+  background-color: c.$gray;
+  border: 2px solid c.$yellow;
+  position: relative;
+}
+.canvas-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  position: relative;
+}
+.plus-icon {
+  position: absolute;
+  font-size: 24px;
+  cursor: pointer;
+  color: c.$white;
+  background-color: c.$gray;
+}
+#board-wrapper {
+  margin-bottom: 50px;
+}
+.basediv {
+  position: absolute;
+  width: 102px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent; 
+  transform: translate(-50%, -50%);
+  z-index: 2; 
+  cursor: crosshair ;
+}
+.basediv.edit-mode {
+  background-color: c.$gray;
+  border: 10px solid c.$blue;
+}
+.object-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 50px;
+  transform: translate(-50%, -50%);
+  z-index: 1; /* Middle layer */
+}
+.topdiv-object {
+  position: absolute;
+  background-color: white;
+  z-index: 3;
+  min-width: 80px;
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: c.$black;
+  height: 25px;
+  cursor: move;
+  &.edit-mode {
+    cursor: text;
+  }
+}
+textarea {
+  &.topdiv-object {
+    resize: vertical;
+    border: 3px solid c.$green-light;
+    &:focus {
+      border-color: c.$green;  
+      outline: none;  
+      cursor: text;
+    }
+  }
+}
+.edit-mode .topdiv-object .topdiv-process{
+  height: 25px;
+}
+.topdiv-content {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  font-size: calc(100% - 0.5vw); // サイズを画面幅に応じて調整
+  transform-origin: center; // 中央からスケーリング
+}
+.topdiv-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.arrow-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.drawing-container {
+  position: relative;
+  width: 500px;
+  height: 500px;
+  border: 1px solid #000;
+  background: white;
+}
+.arrow-container {
+  position: absolute;
+  z-index: 10000;
+}
+.dashed-line {
+  position: absolute;
+  border-top: 2px dashed #586D8C;
+  z-index: 10000;
+}

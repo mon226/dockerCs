@@ -1,0 +1,33 @@
+@use "./color" as c; // color.scssを使用し、ネームスペースを付ける
+
+:root {
+  --scroll: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: c.$white; // ネームスペースを使って変数を参照
+  background: c.$black; // ネームスペースを使って変数を参照
+  line-height: 1.6;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  margin: 0 auto;
+  font-weight: normal;
+}
+
+a, .green {
+  text-decoration: none;
+  color: c.$green; // ネームスペースを使って変数を参照
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: c.$green-light; // ネームスペースを使って変数を参照
+  }
+}

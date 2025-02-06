@@ -1,0 +1,63 @@
+version: '3.9'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vite_fast
+    working_dir: /app
+    volumes:
+      - ./vite_fast:/app
+    platform: linux/amd64  # x86_64アーキテクチャを指定
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
+
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j_cs
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - ./neo4j/data:/data
+    networks:
+      - app-network
+    env_file: 
+      - .env
+    tty: true
+
+  api:
+    container_name: "api"
+    volumes:
+      - ./back:/code/mount
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - neo4j
+    env_file: 
+      - .env
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=rodent-world-ballad-hawaii-storm-1427
+      - HOST=0.0.0.0
+      - PORT=8080
+    tty: true
+    restart: unless-stopped
+    networks:
+      - app-network
+
+#落書き
+
+networks:
+  app-network:
+    driver: bridge
+
+
+## 参照
+## https://qiita.com/Ryo412/items/0d82934c401ccd6a5df4
