@@ -61,3 +61,11 @@ networks:
 
 ## 参照
 ## https://qiita.com/Ryo412/items/0d82934c401ccd6a5df4
+
+## .envとymlにneo4jのpassを記載
+## cd vite_fast
+## npm install
+## docker-compose up --build
+## http://localhost:8080/docs#/
+
+##必要に応じて.gitフォルダを削除
