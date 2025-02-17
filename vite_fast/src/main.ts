@@ -5,14 +5,18 @@ import App from './App.vue'
 import router from './router'
 import Vuetify  from './plugins/vuetify'
 import 'vuetify/dist/vuetify.min.css';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { faCirclePlus, faUpDownLeftRight, faFloppyDisk, faBars, faCircleInfo, faXmark, faGear } from '@fortawesome/free-solid-svg-icons';
+
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-// アイコンをライブラリに追加
-library.add(faCirclePlus, faUpDownLeftRight, faFloppyDisk, faBars, faCircleInfo, faXmark, faGear);
+import { library, type IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { faCirclePlus, faUpDownLeftRight, faFloppyDisk, faBars, faCircleInfo, faXmark, faGear, faFolder, faPalette, faPlus } from '@fortawesome/free-solid-svg-icons';
+import {  } from '@fortawesome/free-regular-svg-icons';
 
-const app = createApp(App)
+library.add(
+  faCirclePlus, faUpDownLeftRight, faFloppyDisk, faBars,
+  faCircleInfo, faXmark, faGear, faFolder, faPalette,faPlus as IconDefinition
+);
+const app = createApp(App);
 app.component('font-awesome-icon', FontAwesomeIcon);
 
 app.use(createPinia())

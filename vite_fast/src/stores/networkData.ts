@@ -7,6 +7,7 @@ const flag = ref(0);
 const nodes = ref<{ key: string; node: { name: string; layer: string } }[]>([]);
 const edges = ref<{ key: string; type: string;  edge: { fromkey: string; fromname: string; fromlayer: string; tokey: string; toname: string; tolayer: string } }[]>([]);
 const colors = ref(["#CC7F30", "#3bc3ff", "#70e483", "#731A3D", "#F4DA24"]);
+const colorList = ref(["#CC7F30", "#3bc3ff", "#70e483", "#731A3D", "#F4DA24"]);
 const half = ref(0);
 const availableGrid = ref<{ x: number; y: number; z: number }[]>([]);
 const localNodes = ref<{ key: string; node: { name: string; layer: string } }[]>([]);
@@ -18,6 +19,7 @@ const isSavePopup = ref(false);
 const projectName = ref('');
 const projectNumber = ref(0);
 const isImportPopup = ref(false);
+const editColor = ref(new Array(layers.value.length).fill(false));
 
 watch(nodes, () => {
   localNodes.value = nodes.value;
@@ -393,7 +395,18 @@ const importProjectFromNeo4j = (data: any) => {
   setFlag(9);
 }
 
+const addColorList = (color: string) => {
+  colorList.value.push(color);
+}
+
+const setEditColor = (index: number, value: boolean) => {
+  editColor.value[index] = value;
+}
+
+const changeLayerColor = (index: number, color: string) => {
+  colors.value[index] = color;
+}
 
 export const useNetworkDataStore = defineStore("networkData", () => {
-  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j };
+  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor };
 });

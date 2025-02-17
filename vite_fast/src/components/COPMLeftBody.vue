@@ -39,7 +39,18 @@
         <ul>
           <li v-for="(layer, index) in layersCopy" :key="index">
             {{ layer }}
-            <button @click="removeLayer(layer)" class="delete-btn" v-if="!isLayerConfirmed">×</button>
+            <div class="layerSetting">
+              <button 
+                :style="{ backgroundColor: colors[index], width: '20px', height: '20px', border: 'none', cursor: 'pointer' }"
+                @click="alertColor(index)"
+                class="layerColor"
+              ></button>
+              <AColorSetting
+                v-if="editColor[index]"
+                :index = "index"
+              />
+              <button @click="removeLayer(layer)" class="delete-btn" v-if="!isLayerConfirmed">×</button>
+            </div>
           </li>
         </ul>
         <input v-model="newLayer" placeholder="Add a new layer" v-if="!isLayerConfirmed"/>
@@ -152,6 +163,7 @@
 <script>
 import { defineComponent, ref, watch } from 'vue';
 import AH1 from '@/components/atoms/AH1.vue';
+import AColorSetting from '@/components/atoms/AColorSetting.vue';
 import { useNetworkDataStore } from "@/stores/networkData";
 import { computed } from 'vue';
 
@@ -194,6 +206,11 @@ export default defineComponent({
     const oplNodes = computed(() => store.oplNodes);
     const oplNodesCopy = ref(oplNodes.value);
     const selectedLayers = ref([]);
+    const colors = computed(() => store.colors);
+    const colorList = computed(() => store.colorList);
+    const editColor = computed(() => store.editColor);
+    const aColorSettingList = ref(new Array(layersCopy.value.length).fill(false));
+    const layerNumbers = computed(() => layersCopy.value.map((_, index) => index + 1));
 
     const toggleMenu = () => {
       isMenuOpen.value = !isMenuOpen.value;
@@ -285,7 +302,9 @@ export default defineComponent({
       ableAddNewNode.value = false;
       canImportOPL.value = false;
     };
-
+    const alertColor = (index) => {
+      store.setEditColor(index, true);
+    };
     const addNode = () => {
       if (newNodeName.value.trim() && selectedLayer.value) {
         const key = `${newNodeName.value} ( ${selectedLayer.value} )`;
@@ -430,11 +449,16 @@ export default defineComponent({
       oplNodes,
       oplNodesCopy,
       selectedLayers,
-      confirmOPL
+      confirmOPL,
+      colors,
+      colorList,
+      alertColor,
+      editColor,
     };
   },
   components: {
-    AH1
+    AH1,
+    AColorSetting
   },
   emits: ['makeNewProject']
 });
@@ -535,6 +559,13 @@ h2 {
   margin-bottom: 0.5rem;
   border-radius: 5px;
 }
+.layerSetting {
+  float: right;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
 .delete-btn {
   background: c.$maroon;
   color: c.$white;
@@ -545,7 +576,7 @@ h2 {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  float: right;
+
   &:hover {
     background: c.$red;
   }
