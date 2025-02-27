@@ -55,14 +55,15 @@ async def save(data: SaveRequest):
           ## idが存在する場合はdataとprojectNameを更新、存在しない場合は新規作成
           session.run(
               """
-              MERGE (n:Project {id: $id})
-              SET n.data = $data, n.projectName = $projectName, n.savedAt = $savedAt, n.availableGrid = $availableGrid
+              MERGE (n:ProjectAll {id: $id})
+              SET n.data = $data, n.projectName = $projectName, n.savedAt = $savedAt, n.availableGrid = $availableGrid, n.version = $version
               """,
               id=data.projectNumber,
               data=json.dumps(data.data, ensure_ascii=False),
               projectName=data.projectName,
               availableGrid=json.dumps(data.availableGrid, ensure_ascii=False),
-              savedAt=saved_at
+              savedAt=saved_at,
+              version= "1.0.0"
           )
       return {
           "message": "Data saved successfully",
@@ -70,7 +71,8 @@ async def save(data: SaveRequest):
           "data": data.data,
           "projectName": data.projectName,
           "availableGrid": data.availableGrid,
-          "savedAt": saved_at
+          "savedAt": saved_at,
+          "version": "1.0.0"
       }
   except Exception as e:
       raise HTTPException(status_code=500, detail=str(e))
@@ -85,7 +87,7 @@ async def count():
   try:
     with driver.session() as session:
       result = session.run(
-        "MATCH (n:Project) RETURN n.id ORDER BY n.id DESC LIMIT 1"
+        "MATCH (n:ProjectAll) RETURN n.id ORDER BY n.id DESC LIMIT 1"
       )
       record = result.single()
       if record:
@@ -105,9 +107,9 @@ async def get():
   try:
     with driver.session() as session:
       result = session.run(
-        "MATCH (n:Project) RETURN n.id, n.data, n.projectName, n.availableGrid, n.savedAt"
+        "MATCH (n:ProjectAll) RETURN n.id, n.data, n.projectName, n.availableGrid, n.savedAt, n.version"
       )
-      data = [{"id": record["n.id"], "data": record["n.data"], "projectName": record["n.projectName"], "availableGrid": record["n.availableGrid"], "savedAt": record["n.savedAt"]} for record in result]
+      data = [{"id": record["n.id"], "data": record["n.data"], "projectName": record["n.projectName"], "availableGrid": record["n.availableGrid"], "savedAt": record["n.savedAt"], "version": record["n.version"]} for record in result]
       return {"data": data}
   except Exception as e:
     raise HTTPException(status_code=500, detail=str(e))
