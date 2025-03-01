@@ -48,7 +48,7 @@ export default defineComponent({
 
     const calculatePlaneSize = () => {
       if ( nodes.value.length === 0 ) {
-        let m = 5;
+        let m = 21;
         return m;
       } else {
         const maxNodeCount = Math.max(
@@ -62,11 +62,11 @@ export default defineComponent({
             return acc;
           }, {} as Record<string, number>))
         );
-        let m = 2;
-        while (2 * m ** 2 + 2 * m + 1 < maxNodeCount) {
-          m++;
+        let m = 9;
+        while (4 * m ** 2 + 4 * m + 2 < maxNodeCount) {
+          m += 1;
         }
-        return 2 * m + 1;
+        return 2 * m + 3;
       }
     };
 
@@ -109,7 +109,7 @@ export default defineComponent({
               { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [(from.z + to.z) / 2], u: [-u], v: [-v], w: [-w] }),
           colorscale: [[0, color], [1, color]],
           sizemode: "absolute", 
-          sizeref: 0.3,
+          sizeref: 0.5,
           anchor: "tip",
           showscale: false,
           hoverinfo: "none",
@@ -205,7 +205,7 @@ export default defineComponent({
         });
         const options = edgePositions.flatMap((edge) => {
           if (edge.type === 'follows') {
-            return generateCones([edge], 'black', 'from');
+            return generateCones([edge], 'blue', 'from');
           } else if (edge.type === 'consists of') {
             return generateCones([edge], 'black', 'frommiddle');
           } else if (edge.type === 'exhibits') {
@@ -366,7 +366,6 @@ export default defineComponent({
                   const newFrom = { x: newPosition.x, y: newPosition.y, z: newPosition.z };
                   const to = { x: parseFloat(positions[1].match(/x: (.+?),/)[1]), y: parseFloat(positions[1].match(/y: (.+?),/)[1]), z: parseFloat(positions[1].match(/z: (.+?)\}/)[1]) };
                   if (option.name.startsWith('cone')) {
-                    console.log("cone", option.name);
                     if (option.name.endsWith('from')) {
                       option.x[0] = newFrom.x;
                       option.y[0] = newFrom.y;
