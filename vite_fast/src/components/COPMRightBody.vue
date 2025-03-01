@@ -1,5 +1,4 @@
 <template>
-  <!--<p> {{ flag }} </p>-->
   <div id="crossKey" v-if="flag === 5">
     <div class="grid-item"></div>
     <div class="grid-item"><button class="grid-item button" @click="crossKeyClick('up')">↑</button></div>
@@ -28,7 +27,6 @@ import { defineComponent, ref, onMounted, onUnmounted, watch } from "vue";
 import Plotly from "plotly.js-dist";
 import { useNetworkDataStore } from "../stores/networkData";
 import { computed } from 'vue';
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 export default defineComponent({
   setup(props, { emit }) {

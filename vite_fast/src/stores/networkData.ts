@@ -1,6 +1,7 @@
 import { set } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { ref, watch, reactive } from "vue";
+import { reviseData } from "./versionManager";
 
 const layers = ref(["business", "process", "object", "variable", "cost"]);
 const flag = ref(0);
@@ -20,6 +21,7 @@ const projectName = ref('');
 const projectNumber = ref(0);
 const isImportPopup = ref(false);
 const editColor = ref(new Array(layers.value.length).fill(false));
+const version = import.meta.env.VITE_VERSION as string;
 
 watch(nodes, () => {
   localNodes.value = nodes.value;
@@ -392,6 +394,7 @@ const handleFileUpload = (file: File) => {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target?.result as string);
+      reviseData(data);
       projectName.value = data.projectName;
       projectNumber.value = data.projectNumber;
       availableGrid.value = data.availableGrid;
@@ -452,5 +455,5 @@ const changeLayerColor = (index: number, color: string) => {
 }
 
 export const useNetworkDataStore = defineStore("networkData", () => {
-  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey };
+  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey, version };
 });

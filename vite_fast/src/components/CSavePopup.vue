@@ -34,6 +34,7 @@ export default defineComponent({
     const projectName = computed(() => store.projectName);
     const dataset = computed(() => store.dataset as any);
     const availableGrid = computed(() => store.availableGrid);
+    const version = computed(() => store.version);
 
     const isJsonDownload = ref(false); // JSONダウンロードのチェック状態
 
@@ -47,6 +48,7 @@ export default defineComponent({
         projectName: projectName.value,
         data: JSON.parse(JSON.stringify(dataset.value)),
         availableGrid: JSON.parse(JSON.stringify(availableGrid.value)),
+        version: version.value,
       };
       console.log("Save dataset:", saveDataset);
 
@@ -101,7 +103,8 @@ export default defineComponent({
   padding: 10px;
 
   & label {
-    display: block;
+    display: flex;
+    align-items: center;
     margin: 10px 0;
   }
 

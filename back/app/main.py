@@ -42,6 +42,7 @@ class SaveRequest(BaseModel):
     projectName: str
     data: list
     availableGrid : list
+    version: str
 
 @app.post("/save")
 async def save(data: SaveRequest):
@@ -50,7 +51,7 @@ async def save(data: SaveRequest):
   保存データをレスポンスとして返す。
   """
   try:
-      saved_at = datetime.now(timezone.jst).isoformat()
+      saved_at = datetime.now(timezone.utc).isoformat()
       with driver.session() as session:
           ## idが存在する場合はdataとprojectNameを更新、存在しない場合は新規作成
           session.run(
@@ -63,7 +64,7 @@ async def save(data: SaveRequest):
               projectName=data.projectName,
               availableGrid=json.dumps(data.availableGrid, ensure_ascii=False),
               savedAt=saved_at,
-              version= "1.0.0"
+              version = data.version
           )
       return {
           "message": "Data saved successfully",
@@ -72,7 +73,7 @@ async def save(data: SaveRequest):
           "projectName": data.projectName,
           "availableGrid": data.availableGrid,
           "savedAt": saved_at,
-          "version": "1.0.0"
+          "version": data.version
       }
   except Exception as e:
       raise HTTPException(status_code=500, detail=str(e))
