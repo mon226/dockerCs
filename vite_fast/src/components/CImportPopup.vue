@@ -142,7 +142,6 @@ input {
 .wrapper {
   display: flex;
   gap: 10px;
-  //下揃え
   align-items: flex-end;
 }
 .close {

@@ -4,7 +4,11 @@
       <h2>Save</h2>
       <p>Project Id: {{ projectNumber }}</p>
       <p>Project Name: {{ projectName }}</p>
-      <div class=button-wrapper>
+      <label>
+        <input type="checkbox" v-model="isJsonDownload" />
+        JSON形式でダウンロード
+      </label>
+      <div class="button-wrapper">
         <button @click="closePopup">Close</button>
         <button @click="saveProject">Save</button>
       </div>
@@ -25,20 +29,18 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const closePopup = () => {
-      store.setPopup("close");
-    };
     const store = useNetworkDataStore();
     const isSavePopup = computed(() => store.isSavePopup);
     const projectName = computed(() => store.projectName);
     const dataset = computed(() => store.dataset as any);
     const availableGrid = computed(() => store.availableGrid);
-    const datasetNodes = computed(() => {
-      return dataset.value.filter((data: any) => data.mode === "markers+text");
-    });
-    const datasetEdges = computed(() => {
-      return dataset.value.filter((data: any) => data.mode === "lines");
-    });
+
+    const isJsonDownload = ref(false); // JSONダウンロードのチェック状態
+
+    const closePopup = () => {
+      store.setPopup("close");
+    };
+
     const saveProject = async () => {
       const saveDataset = {
         projectNumber: props.projectNumber,
@@ -47,6 +49,7 @@ export default defineComponent({
         availableGrid: JSON.parse(JSON.stringify(availableGrid.value)),
       };
       console.log("Save dataset:", saveDataset);
+
       try {
         const response = await fetch("http://localhost:8080/save", {
           method: "POST",
@@ -57,26 +60,29 @@ export default defineComponent({
         });
         const result = await response.json();
         console.log("Success:", result);
-      }
-      catch (error) {
+      } catch (error) {
         console.error("Error:", error);
       }
-      const blob = new Blob([JSON.stringify(saveDataset)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `project_${props.projectNumber}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+
+      // チェックが入っている場合のみJSONをダウンロード
+      if (isJsonDownload.value) {
+        const blob = new Blob([JSON.stringify(saveDataset)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `project_${props.projectNumber}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
       store.setPopup("close");
     };
+
     return {
       closePopup,
       isSavePopup,
       projectName,
-      dataset,
-      datasetNodes,
-      datasetEdges,
+      isJsonDownload,
       saveProject,
     };
   },
@@ -97,6 +103,12 @@ export default defineComponent({
   z-index: 10000;
   border: 5px solid c.$blue;
   padding: 10px;
+
+  & label {
+    display: block;
+    margin: 10px 0;
+  }
+
   & button {
     background-color: c.$blue;
     color: c.$white;
@@ -105,8 +117,14 @@ export default defineComponent({
     cursor: pointer;
   }
 }
+
 .button-wrapper {
   display: flex;
   gap: 10px;
+}
+
+lable {
+  display: flex;
+  align-items: center;
 }
 </style>
