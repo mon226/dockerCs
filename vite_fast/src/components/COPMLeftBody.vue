@@ -111,9 +111,26 @@
         <h2>Node List</h2>
         <ul>
           <li v-for="(node, index) in nodes" :key="index">
-            <span class="longKey">
+            <input
+              v-if="editingNodeKey === node.key"
+              v-model="editedKey"
+              @blur="saveEdit(node)"
+              @keyup.enter="saveEdit(node)"
+              class="edit-input"
+            />
+            <span v-else class="longKey">
               {{ node.key }}
             </span>
+            <button 
+              @click="startEditing(node)" 
+              v-if="editingNodeKey !== node.key"
+              style="background: none; border: none; padding: 0; cursor: pointer; height: 25px; margin-right: 0.5rem;"
+            >
+              <font-awesome-icon 
+                :icon="['fas', 'pen-to-square']"
+                style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+              />
+            </button>
             <button @click="removeNode(node.key)" class="delete-btn">×</button>
           </li>
         </ul>
@@ -211,6 +228,8 @@ export default defineComponent({
     const editColor = computed(() => store.editColor);
     const aColorSettingList = ref(new Array(layersCopy.value.length).fill(false));
     const layerNumbers = computed(() => layersCopy.value.map((_, index) => index + 1));
+    const editingNodeKey = ref("");
+    const editedKey = ref("");
 
     const toggleMenu = () => {
       isMenuOpen.value = !isMenuOpen.value;
@@ -331,6 +350,22 @@ export default defineComponent({
       } else {
         store.setFlag(3);
       }
+    };
+    const startEditing = (node) => {
+      editingNodeKey.value = node.key;
+      editedKey.value = node.node.name;
+    };
+
+    const saveEdit = (node) => {
+      if (editedKey.value.trim() && editedKey.value !== node.node.name) {
+        store.updateNodeKey(node.key, editedKey.value, node.node.layer);
+        if (flag.value === 3) {
+          store.setFlag(4);
+        } else {
+          store.setFlag(3);
+        }
+      }
+      editingNodeKey.value = null;
     };
 
     const addEdge = () => {
@@ -454,6 +489,11 @@ export default defineComponent({
       colorList,
       alertColor,
       editColor,
+      aColorSettingList,
+      startEditing,
+      editedKey,
+      saveEdit,
+      editingNodeKey,
     };
   },
   components: {
@@ -627,7 +667,13 @@ input {
 .nodeInfo {
   max-height: 150px;
   overflow-y: auto;
-
+  & li {
+    display: flex;
+    align-items: center;;
+  }
+  & li span {
+    margin-right: 1rem;
+  }
 }
 .edgeControl {
   margin-top: 1rem;

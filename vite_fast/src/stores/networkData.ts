@@ -182,6 +182,50 @@ const removeNode = (key: string) => {
   nodePositions.splice(nodePositions.findIndex(node => node.key === key), 1);
 }
 
+const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
+  const newKey = `${newName} ( ${newLayer} )`;
+  const node = nodes.value.find(node => node.key === oldKey);
+  if (node) {
+    if (!nodes.value.find(node => node.key === newKey)) {
+      node.key = newKey;
+      node.node.name = newName;
+      node.node.layer = newLayer;
+      const nodePosition = nodePositions.find(node => node.key === oldKey);
+      if (nodePosition) {
+        nodePosition.name = newName;
+        nodePosition.key = newKey;
+        nodePosition.layer = newLayer;
+      }
+      edges.value.forEach(edge => {
+        if (edge.edge.fromkey === oldKey) {
+          edge.edge.fromkey = newKey;
+          edge.edge.fromname = newName;
+          edge.edge.fromlayer = newLayer;
+          const oldEdgeKey = edge.key;
+          edge.key = `${newKey} --(${edge.type})-> ${edge.edge.tokey}`;
+          const edgePosition = edgePositions.find(edge => edge.key === oldEdgeKey);
+          if (edgePosition) {
+            edgePosition.key = edge.key;
+          }
+        }
+        if (edge.edge.tokey === oldKey) {
+          edge.edge.tokey = newKey;
+          edge.edge.toname = newName;
+          edge.edge.tolayer = newLayer;
+          const oldEdgeKey = edge.key;
+          edge.key = `${edge.edge.fromkey} --(${edge.type})-> ${newKey}`;
+          const edgePosition = edgePositions.find(edge => edge.key === oldEdgeKey);
+          if (edgePosition) {
+            edgePosition.key = edge.key;
+          }
+        }
+      });
+    } else {
+      console.warn("Node already exists with key:", newKey);
+    }
+  }
+}
+
 const addEdge = (fromkey: string, fromname: string, fromlayer: string, tokey: string, toname: string, tolayer: string, edgetype: string) => {
   const key = `${fromkey} --(${edgetype})-> ${tokey}`;
   if (!edges.value.find(edge => edge.key === key)) {
@@ -408,5 +452,5 @@ const changeLayerColor = (index: number, color: string) => {
 }
 
 export const useNetworkDataStore = defineStore("networkData", () => {
-  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor };
+  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey };
 });

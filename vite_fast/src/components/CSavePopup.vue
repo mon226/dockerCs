@@ -63,8 +63,6 @@ export default defineComponent({
       } catch (error) {
         console.error("Error:", error);
       }
-
-      // チェックが入っている場合のみJSONをダウンロード
       if (isJsonDownload.value) {
         const blob = new Blob([JSON.stringify(saveDataset)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -74,10 +72,8 @@ export default defineComponent({
         a.click();
         URL.revokeObjectURL(url);
       }
-
       store.setPopup("close");
     };
-
     return {
       closePopup,
       isSavePopup,

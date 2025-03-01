@@ -48,7 +48,7 @@ export default defineComponent({
 
     const calculatePlaneSize = () => {
       if ( nodes.value.length === 0 ) {
-        let m = 21;
+        let m = 5;
         return m;
       } else {
         const maxNodeCount = Math.max(
@@ -62,7 +62,7 @@ export default defineComponent({
             return acc;
           }, {} as Record<string, number>))
         );
-        let m = 9;
+        let m = 1;
         while (4 * m ** 2 + 4 * m + 2 < maxNodeCount) {
           m += 1;
         }

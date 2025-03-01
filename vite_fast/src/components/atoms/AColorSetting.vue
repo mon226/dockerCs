@@ -1,7 +1,6 @@
 <template>
   <div class="colorSetting">
     <div class="colorSetting__title">Color Setting</div>
-    <!-- indexを表示 -->
     <div id="listWrapper">
       <font-awesome-icon 
         :icon="['fas', 'folder']"
@@ -15,7 +14,6 @@
           @click="alertColor(color, index)"
         ></button>
       </div>
-      <!-- プラスボタン -->
       <button @click="newColor" style="background: none; border: none; padding: 0; cursor: pointer; height: 20px;">
         <font-awesome-icon 
           :icon="['fas', 'plus']"

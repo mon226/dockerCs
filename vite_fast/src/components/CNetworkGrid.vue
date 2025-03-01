@@ -56,7 +56,6 @@ export default defineComponent({
 });
 </script>
 
-
 <style lang="scss" scoped>
 .grid-container {
   position: relative;
