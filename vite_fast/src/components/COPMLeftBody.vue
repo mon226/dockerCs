@@ -430,6 +430,8 @@ export default defineComponent({
           isNodeVisible.value = true;
           isLayerConfirmed.value = true;
           ableAddNewNode.value = true;
+          layersCopy.value = [];
+          layersCopy.value = [...layers.value];
         }
       },
       { immediate: true }
@@ -494,6 +496,7 @@ export default defineComponent({
       editedKey,
       saveEdit,
       editingNodeKey,
+      flag,
     };
   },
   components: {

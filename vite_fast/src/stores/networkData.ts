@@ -398,7 +398,30 @@ const handleFileUpload = (file: File) => {
       projectName.value = data.projectName;
       projectNumber.value = data.projectNumber;
       availableGrid.value = data.availableGrid;
+      colorList.value = data.colors;
+      colors.value = data.colors;
+      layers.value = data.layers;
       setDataset(data.data);
+      data.data.forEach((trace: any) => {
+        if (trace.type === "scatter3d" && trace.mode === "markers+text") {
+          const layerIndex = layers.value.length - Math.floor(trace.z / 3) - 1; 
+          const layer = layers.value[layerIndex];
+          addNode(trace.name, layer);
+        }
+      });
+      data.data.forEach((trace: any) => {
+        if (trace.type === "scatter3d" && trace.mode === "lines") {
+          const edgeArray = trace.name.replace(" ) --(", "%%%").replace(")-> ", "%%%").replace(/ \( /g, "%%%").replace(" )", "").split("%%%");
+          const fromkey = `${edgeArray[0]} ( ${edgeArray[1]} )`;
+          const edgetype = edgeArray[2];
+          const tokey = `${edgeArray[3]} ( ${edgeArray[4]} )`;
+          const fromname = edgeArray[0];
+          const fromlayer = edgeArray[1];
+          const toname = edgeArray[3];
+          const tolayer = edgeArray[4];
+          addEdge(fromkey, fromname, fromlayer, tokey, toname, tolayer, edgetype);
+        }
+      });
       setFlag(9);
     } catch (error) {
       console.error("Invalid JSON format:", error);
@@ -410,6 +433,9 @@ const importProjectFromNeo4j = (data: any) => {
   projectName.value = data.projectName;
   projectNumber.value = data.id;
   availableGrid.value = JSON.parse(data.availableGrid);
+  colorList.value = JSON.parse(data.colorList);
+  colors.value = JSON.parse(data.colors);
+  layers.value = JSON.parse(data.layers);
   const replacedData = data.data.replace(/'/g, '"');
   let parsedData;
   try {

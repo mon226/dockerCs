@@ -18,7 +18,7 @@ interface DataV1_1_0 {
 }
 
 interface DataV1_2_0 extends DataV1_1_0 {
-  newProperty: string;
+  colors: Record<string, any>;
 }
 
 export const reviseData = (data : any) => {

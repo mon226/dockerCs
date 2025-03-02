@@ -228,7 +228,8 @@ export default defineComponent({
         renderPlot([...dataset1, ...planes, ...dataset2, ...options]);
       } else if (flag.value === 9) {
         renderPlot(dataset.value);
-        store.setFlag(6);
+        console.log("flag9");
+        store.setFlag(11);
       }
     };
     watch(flag, () => {
