@@ -40,13 +40,11 @@ export default defineComponent({
     const dataset = computed(() => store.dataset);
     let selectedTraceIndex = ref(0);
     const availableGrid = computed<any>(() => store.availableGrid);
-    const planeData = {
-      d: 3, 
-    };
+    const planeData = computed<any>(() => store.planeData);
 
     const calculatePlaneSize = () => {
       if ( nodes.value.length === 0 ) {
-        let m = 5;
+        let m = planeData.value.m;
         return m;
       } else {
         const maxNodeCount = Math.max(
@@ -58,13 +56,15 @@ export default defineComponent({
               acc[layer] = 1;
             }
             return acc;
-          }, {} as Record<string, number>))
+          }, {} as Record<string, number>)) as number[]
         );
-        let m = 1;
-        while (4 * m ** 2 + 4 * m + 2 < maxNodeCount) {
-          m += 1;
+        let m = 3;
+        while ( m * m / 5 < maxNodeCount) {
+          m += 2;
         }
-        return 2 * m + 3;
+        m += 6;
+        store.editPlaneData(m , planeData.value.d);
+        return m;
       }
     };
 
@@ -73,7 +73,7 @@ export default defineComponent({
       const m = calculatePlaneSize();
       for (let i = 0; i < layers.length; i++) {
         const layer = layers[i];
-        const z = planeData.d * (layers.length - i - 1);
+        const z = planeData.value.d * (layers.length - i - 1);
         const half = m/ 2;
         store.setHalf(half);
         const plane = {
@@ -147,7 +147,7 @@ export default defineComponent({
       if (plotlyChart.value) {
         const plotlyElement = plotlyChart.value;
         plotlyElement.addEventListener('wheel', (event) => {
-          event.preventDefault();
+          
         }, { passive: true });
         Plotly.newPlot(plotlyChart.value, data, {
           scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }},
@@ -227,9 +227,8 @@ export default defineComponent({
         store.setDataset([...dataset1, ...planes, ...dataset2, ...options]);
         renderPlot([...dataset1, ...planes, ...dataset2, ...options]);
       } else if (flag.value === 9) {
-        renderPlot(dataset.value);
-        console.log("flag9");
-        store.setFlag(11);
+        renderPlot(store.dataset);
+        store.setFlag(3);
       }
     };
     watch(flag, () => {
@@ -482,7 +481,7 @@ export default defineComponent({
         const updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
         updatedData.forEach((trace, index) => {
           if (trace.type === 'scatter3d' && trace.mode === 'markers+text') {
-            const i = layers.value.length - (trace.z[0] / planeData.d) - 1;
+            const i = layers.value.length - (trace.z[0] / planeData.value.d) - 1;
             const color = colors.value[i];
             trace.marker.color = index === selectedTraceIndex.value ? color : trace.marker.color;
           }

@@ -115,6 +115,8 @@ export default defineComponent({
 }
 input {
   margin-right: 10px;
+  height: 100%;
+  padding: 0.25rem;
 }
 .neo4jImport {
   h3 {

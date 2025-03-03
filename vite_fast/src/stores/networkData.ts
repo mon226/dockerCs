@@ -22,6 +22,7 @@ const projectNumber = ref(0);
 const isImportPopup = ref(false);
 const editColor = ref(new Array(layers.value.length).fill(false));
 const version = import.meta.env.VITE_VERSION as string;
+const planeData = ref({ m:5, d:3 });
 
 watch(nodes, () => {
   localNodes.value = nodes.value;
@@ -406,9 +407,11 @@ const handleFileUpload = (file: File) => {
         if (trace.type === "scatter3d" && trace.mode === "markers+text") {
           const layerIndex = layers.value.length - Math.floor(trace.z / 3) - 1; 
           const layer = layers.value[layerIndex];
-          addNode(trace.name, layer);
+          nodes.value.push({ key: trace.name, node: { name: trace.name, layer } });
+          nodePositions.push({ key: trace.name, position: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, name: trace.name, layer });
         }
       });
+      calculatePlaneSize();
       data.data.forEach((trace: any) => {
         if (trace.type === "scatter3d" && trace.mode === "lines") {
           const edgeArray = trace.name.replace(" ) --(", "%%%").replace(")-> ", "%%%").replace(/ \( /g, "%%%").replace(" )", "").split("%%%");
@@ -419,7 +422,8 @@ const handleFileUpload = (file: File) => {
           const fromlayer = edgeArray[1];
           const toname = edgeArray[3];
           const tolayer = edgeArray[4];
-          addEdge(fromkey, fromname, fromlayer, tokey, toname, tolayer, edgetype);
+          edges.value.push({ key: trace.name, type: edgetype, edge: { fromkey, fromname, fromlayer, tokey, toname, tolayer } });
+          edgePositions.push({ key: trace.name, position: { from: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, to : { x: trace.x[1], y: trace.y[1], z: trace.z[1] } }, fromname, fromlayer, toname, tolayer, type: edgetype });
         }
       });
       setFlag(9);
@@ -452,6 +456,7 @@ const importProjectFromNeo4j = (data: any) => {
       addNode(trace.name, layer);
     }
   });
+  calculatePlaneSize();
   parsedData.forEach((trace: any) => {
     if (trace.type === "scatter3d" && trace.mode === "lines") {
       const edgeArray = trace.name.replace(" ) --(", "%%%").replace(")-> ", "%%%").replace(/ \( /g, "%%%").replace(" )", "").split("%%%");
@@ -480,6 +485,30 @@ const changeLayerColor = (index: number, color: string) => {
   colors.value[index] = color;
 }
 
+const editPlaneData = (m: number, d: number) => {
+  planeData.value = { m, d };
+}
+
+const calculatePlaneSize = () => {
+  const maxNodeCount = Math.max(
+    ...Object.values(nodes.value.reduce((acc, node) => {
+      const layer = node.node.layer;
+      if (acc[layer]) {
+        acc[layer]++;
+      } else {
+        acc[layer] = 1;
+      }
+      return acc;
+    }, {} as Record<string, number>))
+  );
+  let m = 3;
+  while ( m * m / 5 < maxNodeCount) {
+    m += 2;
+  }
+  m += 6;
+  editPlaneData(m , planeData.value.d);
+};
+
 export const useNetworkDataStore = defineStore("networkData", () => {
-  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey, version };
+  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions };
 });
