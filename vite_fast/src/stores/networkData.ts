@@ -453,7 +453,8 @@ const importProjectFromNeo4j = (data: any) => {
     if (trace.type === "scatter3d" && trace.mode === "markers+text") {
       const layerIndex = layers.value.length - Math.floor(trace.z / 3) - 1; 
       const layer = layers.value[layerIndex];
-      addNode(trace.name, layer);
+      nodes.value.push({ key: trace.name, node: { name: trace.name, layer } });
+      nodePositions.push({ key: trace.name, position: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, name: trace.name, layer });
     }
   });
   calculatePlaneSize();
@@ -467,7 +468,8 @@ const importProjectFromNeo4j = (data: any) => {
       const fromlayer = edgeArray[1];
       const toname = edgeArray[3];
       const tolayer = edgeArray[4];
-      addEdge(fromkey, fromname, fromlayer, tokey, toname, tolayer, edgetype);
+      edges.value.push({ key: trace.name, type: edgetype, edge: { fromkey, fromname, fromlayer, tokey, toname, tolayer } });
+      edgePositions.push({ key: trace.name, position: { from: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, to : { x: trace.x[1], y: trace.y[1], z: trace.z[1] } }, fromname, fromlayer, toname, tolayer, type: edgetype });
     }
   });
   setFlag(9);
