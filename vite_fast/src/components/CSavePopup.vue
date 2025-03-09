@@ -54,7 +54,6 @@ export default defineComponent({
         planeData: store.planeData,
       };
       console.log("Save dataset:", saveDataset);
-      /*
       try {
         const response = await fetch("http://localhost:8080/save", {
           method: "POST",
@@ -68,7 +67,6 @@ export default defineComponent({
       } catch (error) {
         console.error("Error:", error);
       }
-      */
       if (isJsonDownload.value) {
         const blob = new Blob([JSON.stringify(saveDataset)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
