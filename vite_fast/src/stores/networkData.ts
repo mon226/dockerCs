@@ -188,6 +188,7 @@ const removeNode = (key: string) => {
 const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
   const newKey = `${newName} ( ${newLayer} )`;
   const node = nodes.value.find(node => node.key === oldKey);
+  console.log(oldKey, newKey)
   if (node) {
     if (!nodes.value.find(node => node.key === newKey)) {
       node.key = newKey;
@@ -274,7 +275,8 @@ const makeNodePositions = ( ) => {
       const availablePositions = availableGrid.value.filter(grid => grid.z === planeData.value.d * (layers.value.length - layerIndex - 1));
       const randomIndex = Math.floor(Math.random() * availablePositions.length);
       const position = availablePositions[randomIndex];
-      nodePositions.push({ key: node.key, position, name: node.node.name, layer: node.node.layer });
+      const positionIndex = { x: availablePositions[randomIndex].x, y: availablePositions[randomIndex].y, z: layerIndex };
+      nodePositions.push({ key: node.key, position: positionIndex, name: node.node.name, layer: node.node.layer });
       availableGrid.value = [...availableGrid.value.filter((grid) => grid !== position)];
     });
     newNodes.value = [];
@@ -302,6 +304,7 @@ const makeEdgePositions = ( ) => {
   }
 }
 
+//まだ
 const changeNodePositions = (oldPosition: { x: number; y: number; z: number }, newPosition: { x: number; y: number; z: number }) => {
   const node = nodePositions.find(node => node.position.x === oldPosition.x && node.position.y === oldPosition.y && node.position.z === oldPosition.z);
   if (node) {
@@ -310,6 +313,7 @@ const changeNodePositions = (oldPosition: { x: number; y: number; z: number }, n
   return nodePositions;
 }
 
+//まだ
 const changeEdgePositions = (oldPosition: { from : { x: number; y: number; z: number }, to: { x: number; y: number; z: number } }, newPosition: { from : { x: number; y: number; z: number }, to: { x: number; y: number; z: number } }) => {
   const edge = edgePositions.find(edge => edge.position.from.x === oldPosition.from.x && edge.position.from.y === oldPosition.from.y && edge.position.from.z === oldPosition.from.z && edge.position.to.x === oldPosition.to.x && edge.position.to.y === oldPosition.to.y && edge.position.to.z === oldPosition.to.z);
   if (edge) {
@@ -318,6 +322,7 @@ const changeEdgePositions = (oldPosition: { from : { x: number; y: number; z: nu
   return edgePositions;
 }
 
+//まだ
 const filterNodesAndEdges = (startPosition: { x: number; y: number; z: number }) => {
   const visitedNodes = new Set<string>();
   const visitedEdges = new Set<string>();
@@ -398,35 +403,24 @@ const handleFileUpload = (file: File) => {
       reviseData(data);
       projectName.value = data.projectName;
       projectNumber.value = data.projectNumber;
-      availableGrid.value = data.availableGrid;
-      colorList.value = data.colors;
+      nodes.value = data.nodes;
+      edges.value = data.edges;
+      let nodePositionsFromFile = data.nodePositions;
+      nodePositionsFromFile.forEach((node: any) => {
+        nodePositions.push({ key: node.key, position: { x: node.position.x, y: node.position.y, z: node.position.z }, name: node.name, layer: node.layer });
+      });
+      let edgePositionsFromFile = data.edgePositions;
+      edgePositionsFromFile.forEach((edge: any) => {
+        edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type });
+      });
+      colorList.value = data.colorList;
+      colorList.value = data.colorList;
       colors.value = data.colors;
       layers.value = data.layers;
       planeData.value = data.planeData;
       editPlaneData(data.planeData.m, data.planeData.d);
-      setDataset(data.data);
-      data.data.forEach((trace: any) => {
-        if (trace.type === "scatter3d" && trace.mode === "markers+text") {
-          const layerIndex = layers.value.length - Math.floor(trace.z / planeData.value.d) - 1;
-          const layer = layers.value[layerIndex];
-          nodes.value.push({ key: trace.name, node: { name: trace.name, layer } });
-          nodePositions.push({ key: trace.name, position: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, name: trace.name, layer });
-        }
-      });
-      data.data.forEach((trace: any) => {
-        if (trace.type === "scatter3d" && trace.mode === "lines") {
-          const edgeArray = trace.name.replace(" ) --(", "%%%").replace(")-> ", "%%%").replace(/ \( /g, "%%%").replace(" )", "").split("%%%");
-          const fromkey = `${edgeArray[0]} ( ${edgeArray[1]} )`;
-          const edgetype = edgeArray[2];
-          const tokey = `${edgeArray[3]} ( ${edgeArray[4]} )`;
-          const fromname = edgeArray[0];
-          const fromlayer = edgeArray[1];
-          const toname = edgeArray[3];
-          const tolayer = edgeArray[4];
-          edges.value.push({ key: trace.name, type: edgetype, edge: { fromkey, fromname, fromlayer, tokey, toname, tolayer } });
-          edgePositions.push({ key: trace.name, position: { from: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, to : { x: trace.x[1], y: trace.y[1], z: trace.z[1] } }, fromname, fromlayer, toname, tolayer, type: edgetype });
-        }
-      });
+      newNodes.value = [];
+      newEdges.value = [];
       setFlag(9);
     } catch (error) {
       console.error("Invalid JSON format:", error);
@@ -437,42 +431,19 @@ const handleFileUpload = (file: File) => {
 const importProjectFromNeo4j = (data: any) => {
   projectName.value = data.projectName;
   projectNumber.value = data.id;
-  availableGrid.value = JSON.parse(data.availableGrid);
   colorList.value = JSON.parse(data.colorList);
   colors.value = JSON.parse(data.colors);
   layers.value = JSON.parse(data.layers);
   planeData.value = JSON.parse(data.planeData);
-  editPlaneData(data.planeData.m, data.planeData.d);
-  const replacedData = data.data.replace(/'/g, '"');
-  let parsedData;
-  try {
-    parsedData = JSON.parse(replacedData);
-  } catch (error) {
-    console.error("Failed to parse JSON data:", error);
-    return;
-  }
-  setDataset(parsedData);
-  parsedData.forEach((trace: any) => {
-    if (trace.type === "scatter3d" && trace.mode === "markers+text") {
-      const layerIndex = layers.value.length - Math.floor(trace.z / planeData.value.d) - 1;
-      const layer = layers.value[layerIndex];
-      nodes.value.push({ key: trace.name, node: { name: trace.name, layer } });
-      nodePositions.push({ key: trace.name, position: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, name: trace.name, layer });
-    }
+  nodes.value = JSON.parse(data.nodes);
+  edges.value = JSON.parse(data.edges);
+  let nodePositionsFromFile = JSON.parse(data.nodePositions);
+  nodePositionsFromFile.forEach((node: any) => {
+    nodePositions.push({ key: node.key, position: { x: node.position.x, y: node.position.y, z: node.position.z }, name: node.name, layer: node.layer });
   });
-  parsedData.forEach((trace: any) => {
-    if (trace.type === "scatter3d" && trace.mode === "lines") {
-      const edgeArray = trace.name.replace(" ) --(", "%%%").replace(")-> ", "%%%").replace(/ \( /g, "%%%").replace(" )", "").split("%%%");
-      const fromkey = `${edgeArray[0]} ( ${edgeArray[1]} )`;
-      const edgetype = edgeArray[2];
-      const tokey = `${edgeArray[3]} ( ${edgeArray[4]} )`;
-      const fromname = edgeArray[0];
-      const fromlayer = edgeArray[1];
-      const toname = edgeArray[3];
-      const tolayer = edgeArray[4];
-      edges.value.push({ key: trace.name, type: edgetype, edge: { fromkey, fromname, fromlayer, tokey, toname, tolayer } });
-      edgePositions.push({ key: trace.name, position: { from: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, to : { x: trace.x[1], y: trace.y[1], z: trace.z[1] } }, fromname, fromlayer, toname, tolayer, type: edgetype });
-    }
+  let edgePositionsFromFile = JSON.parse(data.edgePositions);
+  edgePositionsFromFile.forEach((edge: any) => {
+    edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type });
   });
   setFlag(9);
 }

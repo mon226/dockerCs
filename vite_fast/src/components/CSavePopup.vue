@@ -45,13 +45,15 @@ export default defineComponent({
       const saveDataset = {
         projectNumber: props.projectNumber,
         projectName: projectName.value,
-        data: JSON.parse(JSON.stringify(dataset.value)),
-        availableGrid: JSON.parse(JSON.stringify(availableGrid.value)),
         version: store.version,
         colors: store.colors,
         colorList: store.colorList,
         layers: store.layers,
         planeData: store.planeData,
+        nodes: store.nodes,
+        edges: store.edges,
+        nodePositions: store.nodePositions,
+        edgePositions: store.edgePositions,
       };
       console.log("Save dataset:", saveDataset);
       try {

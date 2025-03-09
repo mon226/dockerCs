@@ -85,19 +85,10 @@ export default defineComponent({
           }, {} as Record<string, number>)) as number[]
         );
         let d = planeData.value.d;
-        let oldD = d;
         while ( d * d / 2.5 < maxNodeCount) {
           d += 1;
         }
         store.editPlaneData(planeData.value.m , d);
-        store.nodePositions.forEach((node) => {
-          node.position.z = node.position.z * d / oldD;
-        });
-        store.edgePositions.forEach((edge) => {
-          edge.position.from.z = edge.position.from.z * d / oldD;
-          edge.position.to.z = edge.position.to.z * d / oldD;
-        });
-        store.setAvailableGrid();
         return d;
       }
     };
@@ -128,40 +119,42 @@ export default defineComponent({
 
     const generateCones = (edgesData: any[], color: string, place: string) => {
       const cones = edgesData.map((edge) => {
+        const d = planeData.value.d;
         const from = edge.position.from;
         const to = edge.position.to;
-        const u = to.x - from.x;
+        const u = to.x - from.x
         const v = to.y - from.y;
-        const w = to.z - from.z;
+        const w = -(to.z - from.z) * d;
         return {
           type: "cone",
-          x: [to.x], y: [to.y], z: [to.z], u: [u], v: [v], w: [w],
-            ...(place === 'to' ? { x: [to.x], y: [to.y], z: [to.z] } :
-              place === 'from' ? { x: [from.x], y: [from.y], z: [from.z], u: [-u], v: [-v], w: [-w] } :
-              place === 'tomiddle' ? { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [(from.z + to.z) / 2] } :
-              { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [(from.z + to.z) / 2], u: [-u], v: [-v], w: [-w] }),
+          x: [to.x], y: [to.y], z: [(layers.value.length - to.z - 1) * d], u: [u], v: [v], w: [w],
+            ...(place === 'to' ? { x: [to.x], y: [to.y], z: [(layers.value.length - to.z - 1) * d] } :
+              place === 'from' ? { x: [from.x], y: [from.y], z: [(layers.value.length - from.z - 1) * d], u: [-u], v: [-v], w: [-w] } :
+              place === 'tomiddle' ? { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [((layers.value.length - to.z - 1) + (layers.value.length - from.z - 1)) * d / 2] } :
+              { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [((layers.value.length - to.z - 1) + (layers.value.length - from.z - 1)) * d / 2], u: [-u], v: [-v], w: [-w] }),
           colorscale: [[0, color], [1, color]],
           sizemode: "absolute", 
           sizeref: 0.5,
           anchor: "tip",
           showscale: false,
           hoverinfo: "none",
-          name: `cone {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}${place}`,
+          name: `cone {from {x: ${from.x}, y: ${from.y}, z: ${(layers.value.length - from.z - 1) * d}}, to {x: ${to.x}, y: ${to.y}, z: ${(layers.value.length - to.z - 1) * d}}}${place}`,
         };
       });
       return cones;
     };
     const generateSpheres = (edgesData: any[], color: string, place: string) => {
       const spheres = edgesData.map((edge) => {
+      const d = planeData.value.d;
       const from = edge.position.from;
       const to = edge.position.to;
       const vX = to.x - from.x;
       const vY = to.y - from.y;
-      const vZ = to.z - from.z;
+      const vZ = -(to.z - from.z) * d;
         return {
           type: "scatter3d",
-          x: [to.x - 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [to.y - 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [to.z - 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)],
-          ...(place === 'from' ? { x: [from.x + 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [from.y + 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [from.z + 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)] } : { x: [to.x - 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [to.y - 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [to.z - 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)] }),
+          x: [to.x - 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [to.y - 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [(layers.value.length - to.z - 1) * d - 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)],
+          ...(place === 'from' ? { x: [from.x + 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [from.y + 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [(layers.value.length - from.z - 1) * d + 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)] } : { x: [to.x - 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [to.y - 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [(layers.value.length - to.z - 1) * d - 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)] }),
           u: [0], 
           v: [0], 
           w: [0],
@@ -172,7 +165,7 @@ export default defineComponent({
           anchor: "tip", 
           showscale: false, 
           hoverinfo: "none", 
-          name: `sphere {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}${place}`,
+          name: `sphere {from {x: ${from.x}, y: ${from.y}, z: ${(layers.value.length - from.z - 1) * d}}, to {x: ${to.x}, y: ${to.y}, z: ${(layers.value.length - to.z - 1) * d}}}${place}`,
         };
       });
       return spheres;
@@ -228,13 +221,15 @@ export default defineComponent({
         store.setAvailableGrid();
         const nodePositions = store.makeNodePositions();
         const edgePositions = store.makeEdgePositions();
+        const d = planeData.value.d;
         const dataset1 = nodePositions.map((node) => {
           const layerIndex = layers.value.indexOf(node.layer);
           const color = colors.value[layerIndex];
-          return { x: [node.position.x], y: [node.position.y], z: [node.position.z], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
+          store.removeAvailableGrid(node.position.x, node.position.y, d * (layers.value.length - node.position.z - 1));
+          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
         });
         const dataset2 = edgePositions.map((edge) => {
-          return { x: [edge.position.from.x, edge.position.to.x], y: [edge.position.from.y, edge.position.to.y], z: [edge.position.from.z, edge.position.to.z], type: "scatter3d", mode: "lines", line: { color: "black", width: 2 }, name: `${edge.key}`, hoverinfo: "none" , text: `${edge.type}`};
+          return { x: [edge.position.from.x, edge.position.to.x], y: [edge.position.from.y, edge.position.to.y], z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], type: "scatter3d", mode: "lines", line: { color: "black", width: 2 }, name: `${edge.key}`, hoverinfo: "none" , text: `${edge.type}`};
         });
         const options = edgePositions.flatMap((edge) => {
           if (edge.type === 'follows') {
@@ -262,7 +257,6 @@ export default defineComponent({
         store.setDataset([...dataset1, ...planes, ...dataset2, ...options]);
         renderPlot([...dataset1, ...planes, ...dataset2, ...options]);
       } else if (flag.value === 9) {
-        renderPlot(store.dataset);
         store.setFlag(3);
       }
     };

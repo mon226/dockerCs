@@ -40,13 +40,16 @@ driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 class SaveRequest(BaseModel):
     projectNumber: int
     projectName: str
-    data: list
-    availableGrid : list
     version: str
     colors: list
     colorList: list
     layers: list
-    planeData: list
+    # planeDataは{ m:9, d:3 }の形式で受け取る
+    planeData: dict
+    nodes : list
+    edges : list
+    nodePositions : list
+    edgePositions : list
 
 @app.post("/save")
 async def save(data: SaveRequest):
@@ -61,31 +64,35 @@ async def save(data: SaveRequest):
           session.run(
               """
               MERGE (n:ProjectAll {id: $id})
-              SET n.data = $data, n.projectName = $projectName, n.savedAt = $savedAt, n.availableGrid = $availableGrid, n.version = $version, n.colors = $colors, n.colorList = $colorList, n.layers = $layers, n.planeData = $planeData
+              SET n.projectName = $projectName, n.savedAt = $savedAt, n.version = $version, n.colors = $colors, n.colorList = $colorList, n.layers = $layers, n.nodes = $nodes, n.edges = $edges, n.nodePositions = $nodePositions, n.edgePositions = $edgePositions, n.planeData = $planeData
               """,
               id=data.projectNumber,
-              data=json.dumps(data.data, ensure_ascii=False),
               projectName=data.projectName,
-              availableGrid=json.dumps(data.availableGrid, ensure_ascii=False),
               savedAt=saved_at,
               version = data.version,
               colors = json.dumps(data.colors, ensure_ascii=False),
               colorList = json.dumps(data.colorList, ensure_ascii=False),
               layers = json.dumps(data.layers, ensure_ascii=False),
-              planeData = json.dumps(data.planeData, ensure_ascii=False)
+              planeData = json.dumps(data.planeData, ensure_ascii=False),
+              nodes = json.dumps(data.nodes, ensure_ascii=False),
+              edges = json.dumps(data.edges, ensure_ascii=False),
+              nodePositions = json.dumps(data.nodePositions, ensure_ascii=False),
+              edgePositions = json.dumps(data.edgePositions, ensure_ascii=False)
           )
       return {
           "message": "Data saved successfully",
           "id": data.projectNumber,
-          "data": data.data,
           "projectName": data.projectName,
-          "availableGrid": data.availableGrid,
           "savedAt": saved_at,
           "version": data.version,
           "colors": data.colors,
           "colorList": data.colorList,
           "layers": data.layers,
-          "planeData": data.planeData
+          "planeData": data.planeData,
+          "nodes": data.nodes,
+          "edges": data.edges,
+          "nodePositions": data.nodePositions,
+          "edgePositions": data.edgePositions
       }
   except Exception as e:
       raise HTTPException(status_code=500, detail=str(e))
@@ -120,9 +127,9 @@ async def get():
   try:
     with driver.session() as session:
       result = session.run(
-        "MATCH (n:ProjectAll) RETURN n.id, n.data, n.projectName, n.availableGrid, n.savedAt, n.version, n.colors, n.colorList, n.layers, n.planeData"
+        "MATCH (n:ProjectAll) RETURN n.id, n.projectName, n.savedAt, n.version, n.colors, n.colorList, n.layers, n.nodes, n.edges, n.nodePositions, n.edgePositions, n.planeData"
       )
-      data = [{"id": record["n.id"], "data": record["n.data"], "projectName": record["n.projectName"], "availableGrid": record["n.availableGrid"], "savedAt": record["n.savedAt"], "version": record["n.version"], "colors": record["n.colors"], "colorList": record["n.colorList"], "layers": record["n.layers"], "planeData": record["n.planeData"]} for record in result]
+      data = [{"id": record["n.id"], "projectName": record["n.projectName"], "savedAt": record["n.savedAt"], "version": record["n.version"], "colors": record["n.colors"], "colorList": record["n.colorList"], "layers": record["n.layers"], "nodes": record["n.nodes"], "edges": record["n.edges"], "nodePositions": record["n.nodePositions"], "edgePositions": record["n.edgePositions"], "planeData": record["n.planeData"]} for record in result]
       return {"data": data}
   except Exception as e:
     raise HTTPException(status_code=500, detail=str(e))
