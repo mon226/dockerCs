@@ -22,7 +22,7 @@ const projectNumber = ref(0);
 const isImportPopup = ref(false);
 const editColor = ref(new Array(layers.value.length).fill(false));
 const version = import.meta.env.VITE_VERSION as string;
-const planeData = ref({ m:5, d:3 });
+const planeData = ref({ m:9, d:3 });
 
 watch(nodes, () => {
   localNodes.value = nodes.value;
@@ -259,7 +259,7 @@ const setAvailableGrid = () => {
   for (let i = 0; i < layers.value.length; i++) {
     for (let j = Math.ceil(-half.value); j <= Math.floor(half.value); j++) {
       for (let k = Math.ceil(-half.value); k <= Math.floor(half.value); k++) {
-        availableGrid.value.push({ x: j, y: k, z: 3 * (layers.value.length - i - 1) });
+        availableGrid.value.push({ x: j, y: k, z: planeData.value.d * (layers.value.length - i - 1) });
       }
     }
   }
@@ -271,7 +271,7 @@ const makeNodePositions = ( ) => {
   if (newNodes.value.length !== 0) {
     newNodes.value.forEach(node => {
       const layerIndex = layers.value.indexOf(node.node.layer);
-      const availablePositions = availableGrid.value.filter(grid => grid.z === 3 * (layers.value.length - layerIndex - 1));
+      const availablePositions = availableGrid.value.filter(grid => grid.z === planeData.value.d * (layers.value.length - layerIndex - 1));
       const randomIndex = Math.floor(Math.random() * availablePositions.length);
       const position = availablePositions[randomIndex];
       nodePositions.push({ key: node.key, position, name: node.node.name, layer: node.node.layer });
@@ -402,16 +402,17 @@ const handleFileUpload = (file: File) => {
       colorList.value = data.colors;
       colors.value = data.colors;
       layers.value = data.layers;
+      planeData.value = data.planeData;
+      editPlaneData(data.planeData.m, data.planeData.d);
       setDataset(data.data);
       data.data.forEach((trace: any) => {
         if (trace.type === "scatter3d" && trace.mode === "markers+text") {
-          const layerIndex = layers.value.length - Math.floor(trace.z / 3) - 1; 
+          const layerIndex = layers.value.length - Math.floor(trace.z / planeData.value.d) - 1;
           const layer = layers.value[layerIndex];
           nodes.value.push({ key: trace.name, node: { name: trace.name, layer } });
           nodePositions.push({ key: trace.name, position: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, name: trace.name, layer });
         }
       });
-      calculatePlaneSize();
       data.data.forEach((trace: any) => {
         if (trace.type === "scatter3d" && trace.mode === "lines") {
           const edgeArray = trace.name.replace(" ) --(", "%%%").replace(")-> ", "%%%").replace(/ \( /g, "%%%").replace(" )", "").split("%%%");
@@ -440,6 +441,8 @@ const importProjectFromNeo4j = (data: any) => {
   colorList.value = JSON.parse(data.colorList);
   colors.value = JSON.parse(data.colors);
   layers.value = JSON.parse(data.layers);
+  planeData.value = JSON.parse(data.planeData);
+  editPlaneData(data.planeData.m, data.planeData.d);
   const replacedData = data.data.replace(/'/g, '"');
   let parsedData;
   try {
@@ -451,13 +454,12 @@ const importProjectFromNeo4j = (data: any) => {
   setDataset(parsedData);
   parsedData.forEach((trace: any) => {
     if (trace.type === "scatter3d" && trace.mode === "markers+text") {
-      const layerIndex = layers.value.length - Math.floor(trace.z / 3) - 1; 
+      const layerIndex = layers.value.length - Math.floor(trace.z / planeData.value.d) - 1;
       const layer = layers.value[layerIndex];
       nodes.value.push({ key: trace.name, node: { name: trace.name, layer } });
       nodePositions.push({ key: trace.name, position: { x: trace.x[0], y: trace.y[0], z: trace.z[0] }, name: trace.name, layer });
     }
   });
-  calculatePlaneSize();
   parsedData.forEach((trace: any) => {
     if (trace.type === "scatter3d" && trace.mode === "lines") {
       const edgeArray = trace.name.replace(" ) --(", "%%%").replace(")-> ", "%%%").replace(/ \( /g, "%%%").replace(" )", "").split("%%%");
@@ -511,6 +513,26 @@ const calculatePlaneSize = () => {
   editPlaneData(m , planeData.value.d);
 };
 
+const calculateDistance = () => {
+  const maxNodeCount = Math.max(
+    ...Object.values(nodes.value.reduce((acc, node) => {
+      const layer = node.node.layer;
+      if (acc[layer]) {
+        acc[layer]++;
+      } else {
+        acc[layer] = 1;
+      }
+      return acc;
+    }, {} as Record<string, number>)) as number[]
+  );
+  let d = 3;
+  while ( d * d / 2.5 < maxNodeCount) {
+    d += 1;
+  }
+  editPlaneData(planeData.value.m , d);
+  return d;
+};
+
 export const useNetworkDataStore = defineStore("networkData", () => {
-  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions };
+  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions, calculateDistance };
 });

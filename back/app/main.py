@@ -46,6 +46,7 @@ class SaveRequest(BaseModel):
     colors: list
     colorList: list
     layers: list
+    planeData: list
 
 @app.post("/save")
 async def save(data: SaveRequest):
@@ -60,7 +61,7 @@ async def save(data: SaveRequest):
           session.run(
               """
               MERGE (n:ProjectAll {id: $id})
-              SET n.data = $data, n.projectName = $projectName, n.savedAt = $savedAt, n.availableGrid = $availableGrid, n.version = $version, n.colors = $colors, n.colorList = $colorList, n.layers = $layers
+              SET n.data = $data, n.projectName = $projectName, n.savedAt = $savedAt, n.availableGrid = $availableGrid, n.version = $version, n.colors = $colors, n.colorList = $colorList, n.layers = $layers, n.planeData = $planeData
               """,
               id=data.projectNumber,
               data=json.dumps(data.data, ensure_ascii=False),
@@ -70,7 +71,8 @@ async def save(data: SaveRequest):
               version = data.version,
               colors = json.dumps(data.colors, ensure_ascii=False),
               colorList = json.dumps(data.colorList, ensure_ascii=False),
-              layers = json.dumps(data.layers, ensure_ascii=False)
+              layers = json.dumps(data.layers, ensure_ascii=False),
+              planeData = json.dumps(data.planeData, ensure_ascii=False)
           )
       return {
           "message": "Data saved successfully",
@@ -82,7 +84,8 @@ async def save(data: SaveRequest):
           "version": data.version,
           "colors": data.colors,
           "colorList": data.colorList,
-          "layers": data.layers
+          "layers": data.layers,
+          "planeData": data.planeData
       }
   except Exception as e:
       raise HTTPException(status_code=500, detail=str(e))
@@ -117,9 +120,9 @@ async def get():
   try:
     with driver.session() as session:
       result = session.run(
-        "MATCH (n:ProjectAll) RETURN n.id, n.data, n.projectName, n.availableGrid, n.savedAt, n.version, n.colors, n.colorList, n.layers"
+        "MATCH (n:ProjectAll) RETURN n.id, n.data, n.projectName, n.availableGrid, n.savedAt, n.version, n.colors, n.colorList, n.layers, n.planeData"
       )
-      data = [{"id": record["n.id"], "data": record["n.data"], "projectName": record["n.projectName"], "availableGrid": record["n.availableGrid"], "savedAt": record["n.savedAt"], "version": record["n.version"], "colors": record["n.colors"], "colorList": record["n.colorList"], "layers": record["n.layers"]} for record in result]
+      data = [{"id": record["n.id"], "data": record["n.data"], "projectName": record["n.projectName"], "availableGrid": record["n.availableGrid"], "savedAt": record["n.savedAt"], "version": record["n.version"], "colors": record["n.colors"], "colorList": record["n.colorList"], "layers": record["n.layers"], "planeData": record["n.planeData"]} for record in result]
       return {"data": data}
   except Exception as e:
     raise HTTPException(status_code=500, detail=str(e))

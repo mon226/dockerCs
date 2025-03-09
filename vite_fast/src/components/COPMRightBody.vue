@@ -68,12 +68,47 @@ export default defineComponent({
       }
     };
 
+    const calculateDistance = () => {
+      if ( nodes.value.length === 0 ) {
+        let d = planeData.value.d;
+        return d;
+      } else {
+        const maxNodeCount = Math.max(
+          ...Object.values(nodes.value.reduce((acc, node) => {
+            const layer = node.node.layer;
+            if (acc[layer]) {
+              acc[layer]++;
+            } else {
+              acc[layer] = 1;
+            }
+            return acc;
+          }, {} as Record<string, number>)) as number[]
+        );
+        let d = planeData.value.d;
+        let oldD = d;
+        while ( d * d / 2.5 < maxNodeCount) {
+          d += 1;
+        }
+        store.editPlaneData(planeData.value.m , d);
+        store.nodePositions.forEach((node) => {
+          node.position.z = node.position.z * d / oldD;
+        });
+        store.edgePositions.forEach((edge) => {
+          edge.position.from.z = edge.position.from.z * d / oldD;
+          edge.position.to.z = edge.position.to.z * d / oldD;
+        });
+        store.setAvailableGrid();
+        return d;
+      }
+    };
+
     const generatePlanes = (layers: string[], colors: any[]) => {
       const planes = [];
       const m = calculatePlaneSize();
+      const d = calculateDistance();
       for (let i = 0; i < layers.length; i++) {
         const layer = layers[i];
-        const z = planeData.value.d * (layers.length - i - 1);
+        const z = d * (layers.length - i - 1);
         const half = m/ 2;
         store.setHalf(half);
         const plane = {
@@ -234,7 +269,6 @@ export default defineComponent({
     watch(flag, () => {
       updatePlot();
     });
-
     onMounted(() => {
       updatePlot();
     });

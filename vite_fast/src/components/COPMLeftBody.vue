@@ -701,6 +701,10 @@ input {
   overflow-y: auto;
   & li {
     min-width: 95%;
+    display: flex;
+  }
+  & button {
+    margin-left: 2.5px;
   }
 }
 .newEdge {
@@ -750,6 +754,7 @@ input {
   max-width: calc(100% - 30px);
   overflow: auto;
   white-space: nowrap;
+  padding-right: 0.5rem;
 }
 ::-webkit-scrollbar {
   width: 8px;
