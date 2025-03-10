@@ -26,5 +26,7 @@ export const reviseData = (data : any) => {
     console.log(data.version, data.projectNumber, data.data, data.projectName, data.availableGrid);
   } else if (data.version === '1.2.0') {
     console.log(version);
+  } else if (data.version === '1.3.0') {
+    console.log(version);
   }
 }

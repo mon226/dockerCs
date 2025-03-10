@@ -32,10 +32,7 @@ export default defineComponent({
     const store = useNetworkDataStore();
     const isSavePopup = computed(() => store.isSavePopup);
     const projectName = computed(() => store.projectName);
-    const dataset = computed(() => store.dataset as any);
-    const availableGrid = computed(() => store.availableGrid);
-
-    const isJsonDownload = ref(false); // JSONダウンロードのチェック状態
+    const isJsonDownload = ref(false);
 
     const closePopup = () => {
       store.setPopup("close");

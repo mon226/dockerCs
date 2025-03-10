@@ -11,8 +11,6 @@ const colors = ref(["#CC7F30", "#3bc3ff", "#70e483", "#731A3D", "#F4DA24"]);
 const colorList = ref(["#CC7F30", "#3bc3ff", "#70e483", "#731A3D", "#F4DA24"]);
 const half = ref(0);
 const availableGrid = ref<{ x: number; y: number; z: number }[]>([]);
-const localNodes = ref<{ key: string; node: { name: string; layer: string } }[]>([]);
-const localEdges = ref<{ key: string; type: string;  edge: { fromkey: string; fromname: string; fromlayer: string; tokey: string; toname: string; tolayer: string } }[]>([]);
 const newNodes = ref<{ key: string; node: { name: string; layer: string } }[]>([]);
 const newEdges = ref<{ key: string; type: string;  edge: { fromkey: string; fromname: string; fromlayer: string; tokey: string; toname: string; tolayer: string } }[]>([]);
 const dataset = ref<{}>({});
@@ -24,18 +22,10 @@ const editColor = ref(new Array(layers.value.length).fill(false));
 const version = import.meta.env.VITE_VERSION as string;
 const planeData = ref({ m:9, d:3 });
 
-watch(nodes, () => {
-  localNodes.value = nodes.value;
-});
-watch(edges, () => {
-  localEdges.value = edges.value;
-});
 watch(flag, () => {
   if (flag.value === 1) {
     nodes.value = [];
     edges.value = [];
-    localNodes.value = [];
-    localEdges.value = [];
     newNodes.value = [];
     newEdges.value = [];
     dataset.value = {};

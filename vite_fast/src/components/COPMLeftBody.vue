@@ -166,7 +166,7 @@
         <ul>
           <li v-for="(edge, index) in edges" :key="index">
             <span class="longKey">
-              {{ edge.key }}
+              {{ edge.edge.fromname }} !! {{ edge.type }} !! {{ edge.edge.toname }}
             </span>
             <button @click="removeEdge(edge.key)" class="delete-btn">×</button>
           </li>
@@ -374,7 +374,7 @@ export default defineComponent({
           alert('fromとtoが同じノードです');
           return;
         }
-        store.addEdge( edgeFrom.value, nodes.value.find(node => node.key === edgeFrom.value).name, nodes.value.find(node => node.key === edgeFrom.value).layer, edgeTo.value, nodes.value.find(node => node.key === edgeTo.value).name, nodes.value.find(node => node.key === edgeTo.value).layer, edgeType.value );
+        store.addEdge( edgeFrom.value, nodes.value.find(node => node.key === edgeFrom.value).node.name, nodes.value.find(node => node.key === edgeFrom.value).node.layer, edgeTo.value, nodes.value.find(node => node.key === edgeTo.value).node.name, nodes.value.find(node => node.key === edgeTo.value).node.layer, edgeType.value );
         if (flag.value === 3) {
           store.setFlag(4);
         } else {
@@ -560,6 +560,9 @@ li {
   border-bottom: 5px solid c.$blue;
   padding: 1rem;
   color: c.$black;
+  & .h1-wrapper {
+    margin-bottom: 10px;
+  }
 }
 
 .layerControl {
@@ -668,7 +671,7 @@ input {
   align-items: center;
 }
 .nodeInfo {
-  max-height: 150px;
+  max-height: 200px;
   overflow-y: auto;
   & li {
     display: flex;
@@ -697,7 +700,7 @@ input {
   list-style-type: none;
 }
 .edgeInfo {
-  max-height: 150px;
+  max-height: 200px;
   overflow-y: auto;
   & li {
     min-width: 95%;
