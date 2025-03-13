@@ -110,7 +110,7 @@
         </div>
         <h2>Node List</h2>
         <ul>
-          <li v-for="(node, index) in nodes" :key="index">
+          <li v-for="(node, index) in sortedNodes" :key="index">
             <input
               v-if="editingNodeKey === node.key"
               v-model="editedKey"
@@ -164,9 +164,11 @@
         </div>
         <h2>Edge List</h2>
         <ul>
-          <li v-for="(edge, index) in edges" :key="index">
+          <li v-for="(edge, index) in sortedEdges" :key="index">
             <span class="longKey">
-              {{ edge.edge.fromname }} !! {{ edge.type }} !! {{ edge.edge.toname }}
+              <div class="edgeName">
+                {{ edge.edge.fromname }} <span class="edgeType"> {{ edge.type }} </span> {{ edge.edge.toname }} 
+              </div>
             </span>
             <button @click="removeEdge(edge.key)" class="delete-btn">×</button>
           </li>
@@ -503,6 +505,26 @@ export default defineComponent({
     AH1,
     AColorSetting
   },
+  computed: {
+    sortedNodes() {
+      const layerOrder = this.layersCopy;
+
+      return [...this.nodes].sort((a, b) => {
+        return layerOrder.indexOf(a.node.layer) - layerOrder.indexOf(b.node.layer);
+      });
+    },
+    sortedEdges() {
+      const layerOrder = this.layersCopy;
+
+      return [...this.edges].sort((a, b) => {
+        const fromLayerOrder = layerOrder.indexOf(a.edge.fromlayer) - layerOrder.indexOf(b.edge.fromlayer);
+        if (fromLayerOrder !== 0) {
+          return fromLayerOrder;
+        }
+        return layerOrder.indexOf(a.edge.tolayer) - layerOrder.indexOf(b.edge.tolayer);
+      });
+    }
+  },
   emits: ['makeNewProject']
 });
 </script>
@@ -763,6 +785,17 @@ input {
   width: 8px;
   height: 8px;
   background: c.$white;
+}
+.edgeName {
+  display: flex;
+  align-items: center;
+}
+.edgeType {
+  font-size: 0.8rem;
+  padding: 0.1rem 0.3rem;
+  background-color: c.$blue-light;
+  border-radius: 5px;
+  margin: 0 0.1rem;
 }
 </style>
 
