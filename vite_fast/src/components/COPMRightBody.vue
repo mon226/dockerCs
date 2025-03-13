@@ -245,9 +245,9 @@ export default defineComponent({
           } else if (edge.type === 'requires') {
             return generateSpheres([edge], 'white', 'from');
           } else if (edge.type === 'consumes') {
-            return generateCones([edge], 'white', 'from');
+            return generateCones([edge], 'green', 'from');
           } else if (edge.type === 'yields') {
-            return generateCones([edge], 'white', 'to');
+            return generateCones([edge], 'red', 'to');
           } else if (edge.type === 'affects') {
             return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
           } else {
@@ -291,7 +291,7 @@ export default defineComponent({
               });
               const options2 = edges.flatMap((edge) => {
                 if (edge.type === 'follows') {
-                  return generateCones([edge], 'black', 'from');
+                  return generateCones([edge], 'blue', 'from');
                 } else if (edge.type === 'consists of') {
                   return generateCones([edge], 'black', 'frommiddle');
                 } else if (edge.type === 'exhibits') {

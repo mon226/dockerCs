@@ -110,28 +110,30 @@
         </div>
         <h2>Node List</h2>
         <ul>
-          <li v-for="(node, index) in sortedNodes" :key="index">
-            <input
-              v-if="editingNodeKey === node.key"
-              v-model="editedKey"
-              @blur="saveEdit(node)"
-              @keyup.enter="saveEdit(node)"
-              class="edit-input"
-            />
-            <span v-else class="longKey">
-              {{ node.key }}
-            </span>
-            <button 
-              @click="startEditing(node)" 
-              v-if="editingNodeKey !== node.key"
-              style="background: none; border: none; padding: 0; cursor: pointer; height: 25px; margin-right: 0.5rem;"
-            >
-              <font-awesome-icon 
-                :icon="['fas', 'pen-to-square']"
-                style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+          <li v-for="(node, index) in sortedNodes" :key="index"  :style="getNodeStyle(node.node.layer)">
+            <div class="nodeWrapper">
+              <input
+                v-if="editingNodeKey === node.key"
+                v-model="editedKey"
+                @blur="saveEdit(node)"
+                @keyup.enter="saveEdit(node)"
+                class="edit-input"
               />
-            </button>
-            <button @click="removeNode(node.key)" class="delete-btn">×</button>
+              <span v-else class="longKey">
+                {{ node.key }}
+              </span>
+              <button 
+                @click="startEditing(node)" 
+                v-if="editingNodeKey !== node.key"
+                style="background: none; border: none; padding: 0; cursor: pointer; height: 25px; margin-right: 0.5rem;"
+              >
+                <font-awesome-icon 
+                  :icon="['fas', 'pen-to-square']"
+                  style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+                />
+              </button>
+              <button @click="removeNode(node.key)" class="delete-btn">×</button>
+            </div>
           </li>
         </ul>
       </div>
@@ -167,7 +169,11 @@
           <li v-for="(edge, index) in sortedEdges" :key="index">
             <span class="longKey">
               <div class="edgeName">
-                {{ edge.edge.fromname }} <span class="edgeType"> {{ edge.type }} </span> {{ edge.edge.toname }} 
+                {{ edge.edge.fromname }}
+                <span class="edgeType" :style="getEdgeTypeStyle(edge.type)">
+                  {{ edge.type }}
+                </span>
+                {{ edge.edge.toname }}
               </div>
             </span>
             <button @click="removeEdge(edge.key)" class="delete-btn">×</button>
@@ -215,6 +221,7 @@ export default defineComponent({
     const edgeType = ref('');
     const edgeTo = ref('');
     const edgeTypes = ["consists of", "follows",  "exhibits",  "is",  "handles",  "requires",  "consumes",  "yields",  "affects"];
+    const edgeTypesColor = ["#262730", "#5d98b0", "#26273033", "#f3f3f3", "#f4da24", "#e0815e", "#2e9058", "#b61f22", "#731a3d"];
     const edges = computed(() => store.edges);
     const canMakeNewEdge = computed(() => nodes.value.length > 1);
     const canImportOPL = ref(false);
@@ -323,6 +330,37 @@ export default defineComponent({
       ableAddNewNode.value = false;
       canImportOPL.value = false;
     };
+    const getEdgeTypeStyle = (type) => {
+      const index = edgeTypes.indexOf(type);
+      if (index === -1) return {};
+
+      const backgroundColor = edgeTypesColor[index];
+      let textColor = "#0d0d0d";
+      let border = "";
+
+      if (backgroundColor === "#262730" || backgroundColor === "#26273033" || backgroundColor === "#731a3d") {
+        textColor = "#f3f3f3";
+      } else if (backgroundColor === "#f3f3f3") {
+        border = "1px solid #0d0d0d";
+      }
+
+      return {
+        backgroundColor,
+        color: textColor,
+        border
+      };
+    };
+    const getNodeStyle = (type) => {
+      const index = layersCopy.value.indexOf(type);
+      if (index === -1) return {};
+
+      const backgroundColor = `${colors.value[index]}66`; 
+      const width = "100%";
+      return {
+        backgroundColor,
+        width,
+      };
+    }
     const alertColor = (index) => {
       store.setEditColor(index, true);
     };
@@ -499,6 +537,9 @@ export default defineComponent({
       saveEdit,
       editingNodeKey,
       flag,
+      edgeTypesColor,
+      getEdgeTypeStyle,
+      getNodeStyle
     };
   },
   components: {
@@ -793,9 +834,16 @@ input {
 .edgeType {
   font-size: 0.8rem;
   padding: 0.1rem 0.3rem;
-  background-color: c.$blue-light;
   border-radius: 5px;
   margin: 0 0.1rem;
+}
+.nodeWrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  &:hover {
+    background-color: c.$maroon;
+  }
 }
 </style>
 
