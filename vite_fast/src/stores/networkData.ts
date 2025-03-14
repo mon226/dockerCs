@@ -45,7 +45,9 @@ const addLayer = (layer: string) => {
 };
 
 const removeLayer = (layer: string) => {
-  layers.value = [...layers.value.filter((l) => l !== layer)]; 
+  const index = layers.value.indexOf(layer);
+  layers.value = [...layers.value.filter((l) => l !== layer)];
+  colors.value = colors.value.filter((_, i) => i !== index);
 };
 
 const setFlag = (n: number) => {
@@ -178,7 +180,6 @@ const removeNode = (key: string) => {
 const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
   const newKey = `${newName} ( ${newLayer} )`;
   const node = nodes.value.find(node => node.key === oldKey);
-  console.log(oldKey, newKey)
   if (node) {
     if (!nodes.value.find(node => node.key === newKey)) {
       node.key = newKey;
@@ -404,8 +405,9 @@ const handleFileUpload = (file: File) => {
       });
       colorList.value = data.colorList;
       colorList.value = data.colorList;
-      colors.value = data.colors;
-      layers.value = data.layers;
+      // data.layersはlayers = {layer:string, color:string}[]の形式
+      layers.value = data.layers.map((layer: any) => layer.layer);
+      colors.value = data.layers.map((layer: any) => layer.color);
       planeData.value = data.planeData;
       editPlaneData(data.planeData.m, data.planeData.d);
       newNodes.value = [];
@@ -421,8 +423,9 @@ const importProjectFromNeo4j = (data: any) => {
   projectName.value = data.projectName;
   projectNumber.value = data.id;
   colorList.value = JSON.parse(data.colorList);
-  colors.value = JSON.parse(data.colors);
-  layers.value = JSON.parse(data.layers);
+  const parsedData = JSON.parse(data.layers);
+  layers.value = parsedData.map((layer: any) => layer.layer);
+  colors.value = parsedData.map((layer: any) => layer.color);
   planeData.value = JSON.parse(data.planeData);
   nodes.value = JSON.parse(data.nodes);
   edges.value = JSON.parse(data.edges);

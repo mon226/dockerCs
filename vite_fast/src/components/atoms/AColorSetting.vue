@@ -46,7 +46,7 @@
       };
 
       const confirmColor = () => {
-        const colorInput = document.getElementById('color') as HTMLInputElement;
+        const colorInput = document.getElementById('inputColor') as HTMLInputElement;
         if (colorInput) {
           const color = colorInput.value;
           store.addColorList(color);
@@ -98,5 +98,7 @@
 }
 #inputColor {
   border: 1px c.$white solid;
+  height: 30px;
+  margin-top: 5px;
 }
 </style>

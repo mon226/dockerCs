@@ -39,13 +39,18 @@ export default defineComponent({
     };
 
     const saveProject = async () => {
+      const storeColors = store.colors;
+      const storeLayers = store.layers;
+      const layers = [];
+      for (let i = 0; i < storeLayers.length; i++) {
+        layers.push({ layer: storeLayers[i], color: storeColors[i] });
+      }
       const saveDataset = {
         projectNumber: props.projectNumber,
         projectName: projectName.value,
         version: store.version,
-        colors: store.colors,
         colorList: store.colorList,
-        layers: store.layers,
+        layers: layers,
         planeData: store.planeData,
         nodes: store.nodes,
         edges: store.edges,
@@ -75,7 +80,6 @@ export default defineComponent({
         a.click();
         URL.revokeObjectURL(url);
       }
-      
       store.setPopup("close");
     };
     return {

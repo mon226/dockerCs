@@ -41,10 +41,8 @@ class SaveRequest(BaseModel):
     projectNumber: int
     projectName: str
     version: str
-    colors: list
     colorList: list
     layers: list
-    # planeDataは{ m:9, d:3 }の形式で受け取る
     planeData: dict
     nodes : list
     edges : list
@@ -64,13 +62,12 @@ async def save(data: SaveRequest):
           session.run(
               """
               MERGE (n:ProjectAll {id: $id})
-              SET n.projectName = $projectName, n.savedAt = $savedAt, n.version = $version, n.colors = $colors, n.colorList = $colorList, n.layers = $layers, n.nodes = $nodes, n.edges = $edges, n.nodePositions = $nodePositions, n.edgePositions = $edgePositions, n.planeData = $planeData
+              SET n.projectName = $projectName, n.savedAt = $savedAt, n.version = $version, n.colorList = $colorList, n.layers = $layers, n.nodes = $nodes, n.edges = $edges, n.nodePositions = $nodePositions, n.edgePositions = $edgePositions, n.planeData = $planeData
               """,
               id=data.projectNumber,
               projectName=data.projectName,
               savedAt=saved_at,
               version = data.version,
-              colors = json.dumps(data.colors, ensure_ascii=False),
               colorList = json.dumps(data.colorList, ensure_ascii=False),
               layers = json.dumps(data.layers, ensure_ascii=False),
               planeData = json.dumps(data.planeData, ensure_ascii=False),
@@ -85,7 +82,6 @@ async def save(data: SaveRequest):
           "projectName": data.projectName,
           "savedAt": saved_at,
           "version": data.version,
-          "colors": data.colors,
           "colorList": data.colorList,
           "layers": data.layers,
           "planeData": data.planeData,
@@ -127,9 +123,9 @@ async def get():
   try:
     with driver.session() as session:
       result = session.run(
-        "MATCH (n:ProjectAll) RETURN n.id, n.projectName, n.savedAt, n.version, n.colors, n.colorList, n.layers, n.nodes, n.edges, n.nodePositions, n.edgePositions, n.planeData"
+        "MATCH (n:ProjectAll) RETURN n.id, n.projectName, n.savedAt, n.version, n.colorList, n.layers, n.nodes, n.edges, n.nodePositions, n.edgePositions, n.planeData"
       )
-      data = [{"id": record["n.id"], "projectName": record["n.projectName"], "savedAt": record["n.savedAt"], "version": record["n.version"], "colors": record["n.colors"], "colorList": record["n.colorList"], "layers": record["n.layers"], "nodes": record["n.nodes"], "edges": record["n.edges"], "nodePositions": record["n.nodePositions"], "edgePositions": record["n.edgePositions"], "planeData": record["n.planeData"]} for record in result]
+      data = [{"id": record["n.id"], "projectName": record["n.projectName"], "savedAt": record["n.savedAt"], "version": record["n.version"], "colorList": record["n.colorList"], "layers": record["n.layers"], "nodes": record["n.nodes"], "edges": record["n.edges"], "nodePositions": record["n.nodePositions"], "edgePositions": record["n.edgePositions"], "planeData": record["n.planeData"]} for record in result]
       return {"data": data}
   except Exception as e:
     raise HTTPException(status_code=500, detail=str(e))
