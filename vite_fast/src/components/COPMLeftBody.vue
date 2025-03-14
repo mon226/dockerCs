@@ -108,7 +108,7 @@
           </select>
           <button @click="addNode" class="square-btn">追加</button>
         </div>
-        <h2>Node List</h2>
+        <AH2 h2Title="Node List" :content="'nodes'" />
         <ul>
           <li v-for="(node, index) in sortedNodes" :key="index"  :style="getNodeStyle(node.node.layer)">
             <div class="nodeWrapper">
@@ -164,7 +164,7 @@
           </select>
           <button @click="addEdge" class="square-btn">追加</button>
         </div>
-        <h2>Edge List</h2>
+        <AH2 h2Title="Edge List" :content="'edges'" />
         <ul>
           <li v-for="(edge, index) in sortedEdges" :key="index">
             <span class="longKey">
@@ -188,6 +188,7 @@
 <script>
 import { defineComponent, ref, watch } from 'vue';
 import AH1 from '@/components/atoms/AH1.vue';
+import AH2 from '@/components/atoms/AH2.vue';
 import AColorSetting from '@/components/atoms/AColorSetting.vue';
 import { useNetworkDataStore } from "@/stores/networkData";
 import { computed } from 'vue';
@@ -544,6 +545,7 @@ export default defineComponent({
   },
   components: {
     AH1,
+    AH2,
     AColorSetting
   },
   computed: {

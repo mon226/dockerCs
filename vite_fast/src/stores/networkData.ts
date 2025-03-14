@@ -390,7 +390,6 @@ const handleFileUpload = (file: File) => {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target?.result as string);
-      reviseData(data);
       projectName.value = data.projectName;
       projectNumber.value = data.projectNumber;
       nodes.value = data.nodes;

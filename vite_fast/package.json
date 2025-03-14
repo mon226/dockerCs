@@ -21,6 +21,7 @@
     "@types/cytoscape": "^3.21.8",
     "@vueuse/core": "^11.3.0",
     "cytoscape": "^3.30.3",
+    "encoding-japanese": "^2.2.0",
     "esbuild": "^0.25.0",
     "pinia": "^2.2.4",
     "plotly.js-dist": "^2.35.2",
