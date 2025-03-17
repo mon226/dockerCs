@@ -246,7 +246,7 @@ const addAvailableGrid = (x: number, y: number, z: number) => {
 const removeAvailableGrid = (x: number, y: number, z: number) => {
   availableGrid.value = [...availableGrid.value.filter((grid) => grid.x !== x || grid.y !== y || grid.z !== z)];
 }
-
+/*
 const setAvailableGrid = () => {
   availableGrid.value = [];
   for (let i = 0; i < layers.value.length; i++) {
@@ -257,6 +257,32 @@ const setAvailableGrid = () => {
     }
   }
 }
+*/
+
+const setAvailableGrid = () => {
+  const size = Math.floor(half.value); // 範囲を整数で確定
+  const range = 2 * size + 1; // x, y の範囲（-size ～ size）
+  const layerCount = layers.value.length;
+
+  // 事前に配列サイズを決定し、再代入を防ぐ
+  const totalSize = layerCount * range * range;
+  const grid = new Array(totalSize);
+
+  let index = 0;
+  for (let i = 0; i < layerCount; i++) {
+    const z = planeData.value.d * (layerCount - i - 1); 
+
+    for (let j = Math.ceil(-half.value); j <= Math.floor(half.value); j++) {
+      for (let k = Math.ceil(-half.value); k <= Math.floor(half.value); k++) {
+        grid[index++] = { x: j, y: k, z };
+      }
+    }
+  }
+
+  availableGrid.value = grid; // まとめて代入
+};
+
+
 const nodePositions: { key: string; position: { x: number; y: number; z: number }, name: string, layer: string }[] = [];
 const edgePositions: { key: string; position: { from : { x: number; y: number; z: number }, to: { x: number; y: number; z: number } }, fromname: string, fromlayer: string, toname: string, tolayer: string, type: string }[] = [];
 
@@ -406,7 +432,6 @@ const handleFileUpload = (file: File) => {
       });
       colorList.value = data.colorList;
       colorList.value = data.colorList;
-      // data.layersはlayers = {layer:string, color:string}[]の形式
       layers.value = data.layers.map((layer: any) => layer.layer);
       colors.value = data.layers.map((layer: any) => layer.color);
       planeData.value = data.planeData;
@@ -423,18 +448,26 @@ const handleFileUpload = (file: File) => {
 const importProjectFromNeo4j = (data: any) => {
   projectName.value = data.projectName;
   projectNumber.value = data.id;
-  colorList.value = JSON.parse(data.colorList);
-  const parsedData = JSON.parse(data.layers);
-  layers.value = parsedData.map((layer: any) => layer.layer);
-  colors.value = parsedData.map((layer: any) => layer.color);
-  planeData.value = JSON.parse(data.planeData);
-  nodes.value = JSON.parse(data.nodes);
-  edges.value = JSON.parse(data.edges);
-  let nodePositionsFromFile = JSON.parse(data.nodePositions);
+  const parsedData = {
+    colorList: JSON.parse(data.colorList),
+    layers: JSON.parse(data.layers),
+    planeData: JSON.parse(data.planeData),
+    nodes: JSON.parse(data.nodes),
+    edges: JSON.parse(data.edges),
+    nodePositions: JSON.parse(data.nodePositions),
+    edgePositions: JSON.parse(data.edgePositions),
+  };
+  colorList.value = parsedData.colorList;
+  layers.value = parsedData.layers.map((layer: any) => layer.layer);
+  colors.value = parsedData.layers.map((layer: any) => layer.color);
+  planeData.value = parsedData.planeData;
+  nodes.value = parsedData.nodes;
+  edges.value = parsedData.edges;
+  let nodePositionsFromFile = parsedData.nodePositions;
   nodePositionsFromFile.forEach((node: any) => {
     nodePositions.push({ key: node.key, position: { x: node.position.x, y: node.position.y, z: node.position.z }, name: node.name, layer: node.layer });
   });
-  let edgePositionsFromFile = JSON.parse(data.edgePositions);
+  let edgePositionsFromFile = parsedData.edgePositions;
   edgePositionsFromFile.forEach((edge: any) => {
     edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type });
   });

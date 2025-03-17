@@ -32,6 +32,7 @@ import Plotly from "plotly.js-dist";
 import { useNetworkDataStore } from "../stores/networkData";
 import { computed } from 'vue';
 import ASideMenu from '@/components/atoms/ASideMenu.vue';
+import { time } from "console";
 
 export default defineComponent({
   setup(props, { emit }) {
@@ -129,20 +130,22 @@ export default defineComponent({
         const u = to.x - from.x
         const v = to.y - from.y;
         const w = -(to.z - from.z) * d;
+        const toZ = (layers.value.length - to.z - 1) * d;
+        const fromZ = (layers.value.length - from.z - 1) * d;
         return {
           type: "cone",
-          x: [to.x], y: [to.y], z: [(layers.value.length - to.z - 1) * d], u: [u], v: [v], w: [w],
-            ...(place === 'to' ? { x: [to.x], y: [to.y], z: [(layers.value.length - to.z - 1) * d] } :
-              place === 'from' ? { x: [from.x], y: [from.y], z: [(layers.value.length - from.z - 1) * d], u: [-u], v: [-v], w: [-w] } :
-              place === 'tomiddle' ? { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [((layers.value.length - to.z - 1) + (layers.value.length - from.z - 1)) * d / 2] } :
-              { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [((layers.value.length - to.z - 1) + (layers.value.length - from.z - 1)) * d / 2], u: [-u], v: [-v], w: [-w] }),
+          x: [to.x], y: [to.y], z: [toZ], u: [u], v: [v], w: [w],
+            ...(place === 'to' ? { x: [to.x], y: [to.y], z: [toZ] } :
+              place === 'from' ? { x: [from.x], y: [from.y], z: [fromZ], u: [-u], v: [-v], w: [-w] } :
+              place === 'tomiddle' ? { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [(toZ + fromZ) / 2] } :
+              { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [(toZ + fromZ) / 2], u: [-u], v: [-v], w: [-w] }),
           colorscale: [[0, color], [1, color]],
           sizemode: "absolute", 
           sizeref: 0.5,
           anchor: "tip",
           showscale: false,
           hoverinfo: "none",
-          name: `cone {from {x: ${from.x}, y: ${from.y}, z: ${(layers.value.length - from.z - 1) * d}}, to {x: ${to.x}, y: ${to.y}, z: ${(layers.value.length - to.z - 1) * d}}}${place}`,
+          name: `cone {from {x: ${from.x}, y: ${from.y}, z: ${fromZ}}, to {x: ${to.x}, y: ${to.y}, z: ${toZ}}}${place}`,
         };
       });
       return cones;
@@ -155,10 +158,17 @@ export default defineComponent({
       const vX = to.x - from.x;
       const vY = to.y - from.y;
       const vZ = -(to.z - from.z) * d;
+      const toZ = (layers.value.length - to.z - 1) * d;
+      const fromZ = (layers.value.length - from.z - 1) * d;
+      const norm = Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2);
+      const scale = 0.2 / norm; 
+      const adjX = vX * scale;
+      const adjY = vY * scale;
+      const adjZ = vZ * scale;
         return {
           type: "scatter3d",
-          x: [to.x - 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [to.y - 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [(layers.value.length - to.z - 1) * d - 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)],
-          ...(place === 'from' ? { x: [from.x + 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [from.y + 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [(layers.value.length - from.z - 1) * d + 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)] } : { x: [to.x - 0.2 * vX / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], y: [to.y - 0.2 * vY / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)], z: [(layers.value.length - to.z - 1) * d - 0.2 * vZ / Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2)] }),
+          x: [to.x - adjX], y: [to.y - adjY], z: [toZ - adjZ],
+          ...(place === 'from' ? { x: [from.x + adjX], y: [from.y + adjY], z: [fromZ + adjZ] } : { x: [to.x - adjX], y: [to.y - adjY], z: [toZ - adjZ] }),
           u: [0], 
           v: [0], 
           w: [0],
@@ -169,7 +179,7 @@ export default defineComponent({
           anchor: "tip", 
           showscale: false, 
           hoverinfo: "none", 
-          name: `sphere {from {x: ${from.x}, y: ${from.y}, z: ${(layers.value.length - from.z - 1) * d}}, to {x: ${to.x}, y: ${to.y}, z: ${(layers.value.length - to.z - 1) * d}}}${place}`,
+          name: `sphere {from {x: ${from.x}, y: ${from.y}, z: ${fromZ}}, to {x: ${to.x}, y: ${to.y}, z: ${toZ}}}${place}`,
         };
       });
       return spheres;
