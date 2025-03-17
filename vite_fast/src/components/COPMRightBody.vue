@@ -19,7 +19,6 @@
   <div class="plotyWrapper">
     <ASideMenu v-if="flag > 2" />
     <div ref="plotlyChart" class="plotlyChart">
-
     </div>
   </div>
 
@@ -282,7 +281,7 @@ export default defineComponent({
         const dataset1 = selectedNodePositions.map((node) => {
           const layerIndex = layers.value.indexOf(node.layer);
           const color = colors.value[layerIndex];
-          store.removeAvailableGrid(node.position.x, node.position.y, d * (layers.value.length - node.position.z - 1));
+          store.removeAvailableGrid(node.position.x, node.position.y, node.position.z);
           return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
         });
         const dataset2 = selectedEdgePositions.map((edge) => {
