@@ -17,8 +17,12 @@
     <button @click="resetChoosePoint">終了</button>
   </div>
   <div class="plotyWrapper">
-    <div ref="plotlyChart" class="plotlyChart"></div>
+    <ASideMenu v-if="flag > 2" />
+    <div ref="plotlyChart" class="plotlyChart">
+
+    </div>
   </div>
+
 </template>
 
 
@@ -27,6 +31,7 @@ import { defineComponent, ref, onMounted, onUnmounted, watch } from "vue";
 import Plotly from "plotly.js-dist";
 import { useNetworkDataStore } from "../stores/networkData";
 import { computed } from 'vue';
+import ASideMenu from '@/components/atoms/ASideMenu.vue';
 
 export default defineComponent({
   setup(props, { emit }) {
@@ -35,7 +40,6 @@ export default defineComponent({
     const layers = computed<any>(() => store.layers);
     const flag = computed<any>(() => store.flag);
     const nodes = computed<any>(() => store.nodes);
-    const edges = computed(() => store.edges);
     const colors = computed<any>(() => store.colors);
     const dataset = computed(() => store.dataset);
     let selectedTraceIndex = ref(0);
@@ -258,6 +262,46 @@ export default defineComponent({
         renderPlot([...dataset1, ...planes, ...dataset2, ...options]);
       } else if (flag.value === 9) {
         store.setFlag(3);
+      } else if (flag.value === 15) {
+        const { selectedNodePositions, selectedEdgePositions } = store.selectLayer();
+        const planes = generatePlanes(layers.value, colors.value);
+        store.setAvailableGrid();
+        const d = planeData.value.d;
+        const visibleLayers = store.visibleLayers;
+        const visiblePlanes = planes.filter((plane) => visibleLayers.includes(plane.name.split(" ")[1]));
+        const dataset1 = selectedNodePositions.map((node) => {
+          const layerIndex = layers.value.indexOf(node.layer);
+          const color = colors.value[layerIndex];
+          store.removeAvailableGrid(node.position.x, node.position.y, d * (layers.value.length - node.position.z - 1));
+          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
+        });
+        const dataset2 = selectedEdgePositions.map((edge) => {
+          return { x: [edge.position.from.x, edge.position.to.x], y: [edge.position.from.y, edge.position.to.y], z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], type: "scatter3d", mode: "lines", line: { color: "black", width: 2 }, name: `${edge.key}`, hoverinfo: "none" , text: `${edge.type}`};
+        });
+        const options = selectedEdgePositions.flatMap((edge) => {
+          if (edge.type === 'follows') {
+            return generateCones([edge], 'blue', 'from');
+          } else if (edge.type === 'consists of') {
+            return generateCones([edge], 'black', 'frommiddle');
+          } else if (edge.type === 'exhibits') {
+            return generateCones([edge], 'gray', 'frommiddle');
+          } else if (edge.type === 'is') {
+            return generateCones([edge], 'white', 'tomiddle');
+          } else if (edge.type === 'handles') {
+            return generateSpheres([edge], 'black', 'to');
+          } else if (edge.type === 'requires') {
+            return generateSpheres([edge], 'white', 'from');
+          } else if (edge.type === 'consumes') {
+            return generateCones([edge], 'green', 'from');
+          } else if (edge.type === 'yields') {
+            return generateCones([edge], 'red', 'to');
+          } else if (edge.type === 'affects') {
+            return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
+          } else {
+            return generateSpheres([edge], 'red', 'to');
+          }
+        });
+        renderPlot([...dataset1, ...visiblePlanes, ...dataset2, ...options]);
       }
     };
     watch(flag, () => {
@@ -533,6 +577,9 @@ export default defineComponent({
       resetChoosePoint,
     };
   },
+  components: {
+    ASideMenu,
+  },
 });
 </script>
 
@@ -543,6 +590,7 @@ export default defineComponent({
   height: 88vh;
   border: 5px solid c.$blue;
   background-color: c.$white;
+  position: relative;
 }
 .plotlyChart {
   width: 100%;

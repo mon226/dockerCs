@@ -2,6 +2,7 @@ import { set } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { ref, watch, reactive } from "vue";
 import { reviseData } from "./versionManager";
+import { layer } from "@fortawesome/fontawesome-svg-core";
 
 const layers = ref(["business", "process", "object", "variable", "cost"]);
 const flag = ref(0);
@@ -496,6 +497,20 @@ const calculateDistance = () => {
   return d;
 };
 
+const selectLayer = () => {
+  const selectedNodePositions = nodePositions.filter((node) => visibleLayers.value.includes(node.layer));
+  const selectedEdgePositions = edgePositions.filter((edge) => visibleLayers.value.includes(edge.fromlayer) && visibleLayers.value.includes(edge.tolayer));
+  return { selectedNodePositions, selectedEdgePositions };
+}
+
+let visibleLayers = ref<string[]>([]);
+const setVisibleLayers = (layers: string[]) => {
+  visibleLayers.value = layers;
+}
+
 export const useNetworkDataStore = defineStore("networkData", () => {
-  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions, calculateDistance };
+  return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, 
+    availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, 
+    makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, 
+    setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions, calculateDistance, selectLayer, setVisibleLayers, visibleLayers };
 });

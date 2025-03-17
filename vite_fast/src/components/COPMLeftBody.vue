@@ -237,7 +237,6 @@ export default defineComponent({
     const colorList = computed(() => store.colorList);
     const editColor = computed(() => store.editColor);
     const aColorSettingList = ref(new Array(layersCopy.value.length).fill(false));
-    const layerNumbers = computed(() => layersCopy.value.map((_, index) => index + 1));
     const editingNodeKey = ref("");
     const editedKey = ref("");
 
