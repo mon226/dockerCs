@@ -27,6 +27,7 @@ export default defineComponent({
     const store = useNetworkDataStore();
     const layers = computed(() => store.layers);
     const colors = computed(() => store.colors);
+    const flag = computed<any>(() => store.flag);
     const isMenuOpen = ref(false);
 
     const buttonColors = ref([...colors.value]);
@@ -56,7 +57,11 @@ export default defineComponent({
         store.setFlag(3);
       } else {
         store.setVisibleLayers(visibleLayers);
-        store.setFlag(15);
+        if (flag.value === 15) {
+          store.setFlag(16);
+        } else {
+          store.setFlag(15);
+        }
       }
     };
 
@@ -68,6 +73,7 @@ export default defineComponent({
       toggleColor,
       buttonColors,
       getVisibleLayers,
+      flag
     };
   },
 });

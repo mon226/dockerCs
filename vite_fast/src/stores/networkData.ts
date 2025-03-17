@@ -246,40 +246,23 @@ const addAvailableGrid = (x: number, y: number, z: number) => {
 const removeAvailableGrid = (x: number, y: number, z: number) => {
   availableGrid.value = [...availableGrid.value.filter((grid) => grid.x !== x || grid.y !== y || grid.z !== z)];
 }
-/*
-const setAvailableGrid = () => {
-  availableGrid.value = [];
-  for (let i = 0; i < layers.value.length; i++) {
-    for (let j = Math.ceil(-half.value); j <= Math.floor(half.value); j++) {
-      for (let k = Math.ceil(-half.value); k <= Math.floor(half.value); k++) {
-        availableGrid.value.push({ x: j, y: k, z: planeData.value.d * (layers.value.length - i - 1) });
-      }
-    }
-  }
-}
-*/
 
 const setAvailableGrid = () => {
-  const size = Math.floor(half.value); // 範囲を整数で確定
-  const range = 2 * size + 1; // x, y の範囲（-size ～ size）
+  const size = Math.floor(half.value);
+  const range = 2 * size + 1; 
   const layerCount = layers.value.length;
-
-  // 事前に配列サイズを決定し、再代入を防ぐ
   const totalSize = layerCount * range * range;
   const grid = new Array(totalSize);
 
   let index = 0;
   for (let i = 0; i < layerCount; i++) {
-    const z = planeData.value.d * (layerCount - i - 1); 
-
     for (let j = Math.ceil(-half.value); j <= Math.floor(half.value); j++) {
       for (let k = Math.ceil(-half.value); k <= Math.floor(half.value); k++) {
-        grid[index++] = { x: j, y: k, z };
+        grid[index++] = { x: j, y: k, z:i };
       }
     }
   }
-
-  availableGrid.value = grid; // まとめて代入
+  availableGrid.value = grid; 
 };
 
 
@@ -290,7 +273,7 @@ const makeNodePositions = ( ) => {
   if (newNodes.value.length !== 0) {
     newNodes.value.forEach(node => {
       const layerIndex = layers.value.indexOf(node.node.layer);
-      const availablePositions = availableGrid.value.filter(grid => grid.z === planeData.value.d * (layers.value.length - layerIndex - 1));
+      const availablePositions = availableGrid.value.filter(grid => grid.z === layerIndex);
       const randomIndex = Math.floor(Math.random() * availablePositions.length);
       const position = availablePositions[randomIndex];
       const positionIndex = { x: availablePositions[randomIndex].x, y: availablePositions[randomIndex].y, z: layerIndex };

@@ -120,7 +120,7 @@
                 class="edit-input"
               />
               <span v-else class="longKey">
-                {{ node.key }}
+                {{ node.node.name }}
               </span>
               <button 
                 @click="startEditing(node)" 
@@ -148,7 +148,7 @@
       <div class="edgeInfo" v-if="isEdgeVisible">
         <div class="newEdge" v-if="canMakeNewEdge">
           <select v-model="edgeFrom">
-            <option v-for="(node, index) in nodes" :key="index" :value="node.key">
+            <option v-for="(node, index) in sortedNodes" :key="index" :value="node.key">
               {{ node.key }}
             </option>
           </select>
@@ -158,7 +158,7 @@
             </option>
           </select>
           <select v-model="edgeTo">
-            <option v-for="(node, index) in nodes" :key="index" :value="node.key">
+            <option v-for="(node, index) in sortedNodes" :key="index" :value="node.key">
               {{ node.key }}
             </option>
           </select>

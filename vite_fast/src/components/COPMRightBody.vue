@@ -239,7 +239,7 @@ export default defineComponent({
         const dataset1 = nodePositions.map((node) => {
           const layerIndex = layers.value.indexOf(node.layer);
           const color = colors.value[layerIndex];
-          store.removeAvailableGrid(node.position.x, node.position.y, d * (layers.value.length - node.position.z - 1));
+          store.removeAvailableGrid(node.position.x, node.position.y, node.position.z);
           return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
         });
         const dataset2 = edgePositions.map((edge) => {
@@ -272,7 +272,7 @@ export default defineComponent({
         renderPlot([...dataset1, ...planes, ...dataset2, ...options]);
       } else if (flag.value === 9) {
         store.setFlag(3);
-      } else if (flag.value === 15) {
+      } else if (flag.value === 15 || flag.value === 16) {
         const { selectedNodePositions, selectedEdgePositions } = store.selectLayer();
         const planes = generatePlanes(layers.value, colors.value);
         store.setAvailableGrid();
@@ -395,14 +395,16 @@ export default defineComponent({
 
     const crossKeyClick = (direction: string) => {
       if (plotlyChart.value) {
-        const updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
+        let updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
         updatedData.forEach((trace, index) => {
           if (trace.type === 'scatter3d' && trace.mode === 'markers+text') {
             if (index === selectedTraceIndex.value) {
               const x = trace.x[0];
               const y = trace.y[0];
-              const z = trace.z[0];
+              const d = planeData.value.d;
+              const z = layers.value.length - (trace.z[0]/d) - 1;
               const oldPosition = { x, y, z };
+              console.log(oldPosition);
               if (direction === 'up') {
                 if (availableGrid.value.some((grid) => grid.x === x && grid.y === y + 1 && grid.z === z)) {
                   trace.y[0] = y + 1;
@@ -420,130 +422,51 @@ export default defineComponent({
                   trace.x[0] = x + 1;
                 }
               }
-              const newPosition = { x: trace.x[0], y: trace.y[0], z: trace.z[0] };
+              const newPosition = { x: trace.x[0], y: trace.y[0], z };
               store.addAvailableGrid(oldPosition.x, oldPosition.y, oldPosition.z);
               store.removeAvailableGrid(newPosition.x, newPosition.y, newPosition.z);
               store.changeNodePositions({ x: oldPosition.x, y: oldPosition.y, z: oldPosition.z }, { x: newPosition.x, y: newPosition.y, z: newPosition.z });
               const lines = updatedData.filter((trace) => trace.type === 'scatter3d' && trace.mode === 'lines');
               lines.forEach((line) => {
-                if (line.x[0] === oldPosition.x && line.y[0] === oldPosition.y && line.z[0] === oldPosition.z) {
+                if (line.x[0] === oldPosition.x && line.y[0] === oldPosition.y && line.z[0] === trace.z[0]) {
                   line.x[0] = newPosition.x;
                   line.y[0] = newPosition.y;
-                  line.z[0] = newPosition.z;
-                  store.changeEdgePositions({ from: { x: oldPosition.x, y: oldPosition.y, z: oldPosition.z }, to: { x: line.x[1], y: line.y[1], z: line.z[1] } }, { from: { x: newPosition.x, y: newPosition.y, z: newPosition.z }, to: { x: line.x[1], y: line.y[1], z: line.z[1] } });
-                } else if (line.x[1] === oldPosition.x && line.y[1] === oldPosition.y && line.z[1] === oldPosition.z) {
+                  line.z[0] = trace.z[0];
+                  store.changeEdgePositions({ from: { x: oldPosition.x, y: oldPosition.y, z: oldPosition.z }, to: { x: line.x[1], y: line.y[1], z: layers.value.length - (line.z[1]/d) - 1 } }, { from: { x: newPosition.x, y: newPosition.y, z: newPosition.z }, to: { x: line.x[1], y: line.y[1], z: layers.value.length - (line.z[1]/d) - 1 } });
+                } else if (line.x[1] === oldPosition.x && line.y[1] === oldPosition.y && line.z[1] === trace.z[0]) {
                   line.x[1] = newPosition.x;
                   line.y[1] = newPosition.y;
-                  line.z[1] = newPosition.z;
-                  store.changeEdgePositions({ from: { x: line.x[0], y: line.y[0], z: line.z[0] }, to: { x: oldPosition.x, y: oldPosition.y, z: oldPosition.z } }, { from: { x: line.x[0], y: line.y[0], z: line.z[0] }, to: { x: newPosition.x, y: newPosition.y, z: newPosition.z } });
+                  line.z[1] = trace.z[0];
+                  store.changeEdgePositions({ from: { x: line.x[0], y: line.y[0], z: layers.value.length - (line.z[0]/d) - 1 }, to: { x: oldPosition.x, y: oldPosition.y, z: oldPosition.z } }, { from: { x: line.x[0], y: line.y[0], z:layers.value.length - (line.z[0]/d) - 1 }, to: { x: newPosition.x, y: newPosition.y, z: newPosition.z } });
                 }
               });
-              const options = updatedData.filter((trace) => trace.name.startsWith('cone') || trace.name.startsWith('sphere'));
-              options.forEach((option) => {
-                const position = option.name.match(/\{from (.+?)\}}/)[0];
-                const positions = position.match(/\{x: (.+?), y: (.+?), z: (.+?)\}/g);
-                if (positions[0] === `{x: ${oldPosition.x}, y: ${oldPosition.y}, z: ${oldPosition.z}}`) {
-                  const newFrom = { x: newPosition.x, y: newPosition.y, z: newPosition.z };
-                  const to = { x: parseFloat(positions[1].match(/x: (.+?),/)[1]), y: parseFloat(positions[1].match(/y: (.+?),/)[1]), z: parseFloat(positions[1].match(/z: (.+?)\}/)[1]) };
-                  if (option.name.startsWith('cone')) {
-                    if (option.name.endsWith('from')) {
-                      option.x[0] = newFrom.x;
-                      option.y[0] = newFrom.y;
-                      option.z[0] = newFrom.z;
-                      option.u[0] = -(to.x - newFrom.x);
-                      option.v[0] = -(to.y - newFrom.y);
-                      option.w[0] = -(to.z - newFrom.z);
-                      option.name = `cone {from {x: ${newFrom.x}, y: ${newFrom.y}, z: ${newFrom.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}from`;
-                    } else if (option.name.endsWith('frommiddle')) {
-                      option.x[0] = (newFrom.x + to.x) / 2;
-                      option.y[0] = (newFrom.y + to.y) / 2;
-                      option.z[0] = (newFrom.z + to.z) / 2;
-                      option.u[0] = -(to.x - newFrom.x);
-                      option.v[0] = -(to.y - newFrom.y);
-                      option.w[0] = -(to.z - newFrom.z);
-                      option.name = `cone {from {x: ${newFrom.x}, y: ${newFrom.y}, z: ${newFrom.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}frommiddle`;
-                    } else if (option.name.endsWith('tomiddle')) {
-                      option.x[0] = (newFrom.x + to.x) / 2;
-                      option.y[0] = (newFrom.y + to.y) / 2;
-                      option.z[0] = (newFrom.z + to.z) / 2;
-                      option.u[0] = to.x - newFrom.x;
-                      option.v[0] = to.y - newFrom.y;
-                      option.w[0] = to.z - newFrom.z;
-                      option.name = `cone {from {x: ${newFrom.x}, y: ${newFrom.y}, z: ${newFrom.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}tomiddle`;
-                    } else if (option.name.endsWith('to')) {
-                      option.x[0] = to.x;
-                      option.y[0] = to.y;
-                      option.z[0] = to.z;
-                      option.u[0] = to.x - newFrom.x;
-                      option.v[0] = to.y - newFrom.y;
-                      option.w[0] = to.z - newFrom.z;
-                      option.name = `cone {from {x: ${newFrom.x}, y: ${newFrom.y}, z: ${newFrom.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}to`;
-                    }
-                  } else {
-                    if (option.name.endsWith('from')) {
-                      option.x[0] = newPosition.x + 0.2 * (to.x - newPosition.x) / Math.sqrt((to.x - newPosition.x) ** 2 + (to.y - newPosition.y) ** 2 + (to.z - newPosition.z) ** 2);
-                      option.y[0] = newPosition.y + 0.2 * (to.y - newPosition.y) / Math.sqrt((to.x - newPosition.x) ** 2 + (to.y - newPosition.y) ** 2 + (to.z - newPosition.z) ** 2);
-                      option.z[0] = newPosition.z + 0.2 * (to.z - newPosition.z) / Math.sqrt((to.x - newPosition.x) ** 2 + (to.y - newPosition.y) ** 2 + (to.z - newPosition.z) ** 2);
-                      option.name = `sphere {from {x: ${newPosition.x}, y: ${newPosition.y}, z: ${newPosition.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}from`;
-                    } else {
-                      option.x[0] = to.x - 0.2 * (to.x - newPosition.x) / Math.sqrt((to.x - newPosition.x) ** 2 + (to.y - newPosition.y) ** 2 + (to.z - newPosition.z) ** 2);
-                      option.y[0] = to.y - 0.2 * (to.y - newPosition.y) / Math.sqrt((to.x - newPosition.x) ** 2 + (to.y - newPosition.y) ** 2 + (to.z - newPosition.z) ** 2);
-                      option.z[0] = to.z - 0.2 * (to.z - newPosition.z) / Math.sqrt((to.x - newPosition.x) ** 2 + (to.y - newPosition.y) ** 2 + (to.z - newPosition.z) ** 2);
-                      option.name = `sphere {from {x: ${newPosition.x}, y: ${newPosition.y}, z: ${newPosition.z}}, to {x: ${to.x}, y: ${to.y}, z: ${to.z}}}to`;
-                    }
-                  }
-                } else if (positions[1] === `{x: ${oldPosition.x}, y: ${oldPosition.y}, z: ${oldPosition.z}}`) {
-                  const from = { x: parseFloat(positions[0].match(/x: (.+?),/)[1]), y: parseFloat(positions[0].match(/y: (.+?),/)[1]), z: parseFloat(positions[0].match(/z: (.+?)\}/)[1]) };
-                  const newTo = { x: newPosition.x, y: newPosition.y, z: newPosition.z };
-                  if (option.name.startsWith('cone')) {
-                    if (option.name.endsWith('from')) {
-                      option.x[0] = from.x;
-                      option.y[0] = from.y;
-                      option.z[0] = from.z;
-                      option.u[0] = -(newTo.x - from.x);
-                      option.v[0] = -(newTo.y - from.y);
-                      option.w[0] = -(newTo.z - from.z);
-                      option.name = `cone {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${newTo.x}, y: ${newTo.y}, z: ${newTo.z}}}from`;
-                    } else if (option.name.endsWith('frommiddle')) {
-                      option.x[0] = (from.x + newTo.x) / 2;
-                      option.y[0] = (from.y + newTo.y) / 2;
-                      option.z[0] = (from.z + newTo.z) / 2;
-                      option.u[0] = -(newTo.x - from.x);
-                      option.v[0] = -(newTo.y - from.y);
-                      option.w[0] = -(newTo.z - from.z);
-                      option.name = `cone {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${newTo.x}, y: ${newTo.y}, z: ${newTo.z}}}frommiddle`;
-                    } else if (option.name.endsWith('tomiddle')) {
-                      option.x[0] = (from.x + newTo.x) / 2;
-                      option.y[0] = (from.y + newTo.y) / 2;
-                      option.z[0] = (from.z + newTo.z) / 2;
-                      option.u[0] = newTo.x - from.x;
-                      option.v[0] = newTo.y - from.y;
-                      option.w[0] = newTo.z - from.z;
-                      option.name = `cone {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${newTo.x}, y: ${newTo.y}, z: ${newTo.z}}}tomiddle`;
-                    } else {
-                      option.x[0] = newTo.x;
-                      option.y[0] = newTo.y;
-                      option.z[0] = newTo.z;
-                      option.u[0] = newTo.x - from.x;
-                      option.v[0] = newTo.y - from.y;
-                      option.w[0] = newTo.z - from.z;
-                      option.name = `cone {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${newTo.x}, y: ${newTo.y}, z: ${newTo.z}}}to`;
-                    }
-                  } else {
-                    if (option.name.endsWith('from')) {
-                      option.x[0] = from.x + 0.2 * (newTo.x - from.x) / Math.sqrt((newTo.x - from.x) ** 2 + (newTo.y - from.y) ** 2 + (newTo.z - from.z) ** 2);
-                      option.y[0] = from.y + 0.2 * (newTo.y - from.y) / Math.sqrt((newTo.x - from.x) ** 2 + (newTo.y - from.y) ** 2 + (newTo.z - from.z) ** 2);
-                      option.z[0] = from.z + 0.2 * (newTo.z - from.z) / Math.sqrt((newTo.x - from.x) ** 2 + (newTo.y - from.y) ** 2 + (newTo.z - from.z) ** 2);
-                      option.name = `sphere {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${newTo.x}, y: ${newTo.y}, z: ${newTo.z}}}from`;
-                    } else {
-                      option.x[0] = newTo.x - 0.2 * (newTo.x - from.x) / Math.sqrt((newTo.x - from.x) ** 2 + (newTo.y - from.y) ** 2 + (newTo.z - from.z) ** 2);
-                      option.y[0] = newTo.y - 0.2 * (newTo.y - from.y) / Math.sqrt((newTo.x - from.x) ** 2 + (newTo.y - from.y) ** 2 + (newTo.z - from.z) ** 2);
-                      option.z[0] = newTo.z - 0.2 * (newTo.z - from.z) / Math.sqrt((newTo.x - from.x) ** 2 + (newTo.y - from.y) ** 2 + (newTo.z - from.z) ** 2);
-                      option.name = `sphere {from {x: ${from.x}, y: ${from.y}, z: ${from.z}}, to {x: ${newTo.x}, y: ${newTo.y}, z: ${newTo.z}}}to`;
-                    }
-                  }
+              const edgePositions = store.edgePositions;
+              const newoptions = edgePositions.flatMap((edge) => {
+                if (edge.type === 'follows') {
+                  return generateCones([edge], 'blue', 'from');
+                } else if (edge.type === 'consists of') {
+                  return generateCones([edge], 'black', 'frommiddle');
+                } else if (edge.type === 'exhibits') {
+                  return generateCones([edge], 'gray', 'frommiddle');
+                } else if (edge.type === 'is') {
+                  return generateCones([edge], 'white', 'tomiddle');
+                } else if (edge.type === 'handles') {
+                  return generateSpheres([edge], 'black', 'to');
+                } else if (edge.type === 'requires') {
+                  return generateSpheres([edge], 'white', 'from');
+                } else if (edge.type === 'consumes') {
+                  return generateCones([edge], 'green', 'from');
+                } else if (edge.type === 'yields') {
+                  return generateCones([edge], 'red', 'to');
+                } else if (edge.type === 'affects') {
+                  return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
+                } else {
+                  return generateSpheres([edge], 'red', 'to');
                 }
               });
+              const updatedData2 = updatedData.filter((trace) => !trace.name.startsWith('cone') && !trace.name.startsWith('sphere'));
+              updatedData2.push(...newoptions);
+              updatedData = updatedData2;
             }
           }
         });
@@ -597,7 +520,7 @@ export default defineComponent({
 @use "@/assets/style/color" as c;
 .plotyWrapper {
   width: 100%;
-  height: 88vh;
+  height: 100vh;
   border: 5px solid c.$blue;
   background-color: c.$white;
   position: relative;
