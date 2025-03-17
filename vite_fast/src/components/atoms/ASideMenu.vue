@@ -18,8 +18,7 @@
 </template>
 
 <script lang="ts">
-import { get } from 'http';
-import { defineComponent, computed, ref, watch } from 'vue';
+import { defineComponent, computed, ref } from 'vue';
 import { useNetworkDataStore } from "../../stores/networkData";
 
 export default defineComponent({
