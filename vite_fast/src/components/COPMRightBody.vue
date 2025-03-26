@@ -11,7 +11,8 @@
     <div class="grid-item"></div>
   </div>
   <div id="choosePoint" v-if="flag === 5">
-    <button @click="choosePoint">選択</button>
+    <input type="number" id="pointNumber" v-model="pointNumber" value="2" />
+    <button @click="choosePoint(pointNumber)">抽出</button>
   </div>
   <div id="resetChoosePoint" v-if="flag === 7">
     <button @click="resetChoosePoint">終了</button>
@@ -31,7 +32,6 @@ import Plotly from "plotly.js-dist";
 import { useNetworkDataStore } from "../stores/networkData";
 import { computed } from 'vue';
 import ASideMenu from '@/components/atoms/ASideMenu.vue';
-import { time } from "console";
 
 export default defineComponent({
   setup(props, { emit }) {
@@ -45,10 +45,12 @@ export default defineComponent({
     let selectedTraceIndex = ref(0);
     const availableGrid = computed<any>(() => store.availableGrid);
     const planeData = computed<any>(() => store.planeData);
+    let d = planeData.value.d;
+    let m = planeData.value.m;
+    const pointNumber = ref(2);
 
     const calculatePlaneSize = () => {
       if ( nodes.value.length === 0 ) {
-        let m = planeData.value.m;
         return m;
       } else {
         const maxNodeCount = Math.max(
@@ -67,14 +69,13 @@ export default defineComponent({
           m += 2;
         }
         m += 6;
-        store.editPlaneData(m , planeData.value.d);
+        store.editPlaneData(m , d);
         return m;
       }
     };
 
     const calculateDistance = () => {
       if ( nodes.value.length === 0 ) {
-        let d = planeData.value.d;
         return d;
       } else {
         const maxNodeCount = Math.max(
@@ -88,11 +89,10 @@ export default defineComponent({
             return acc;
           }, {} as Record<string, number>)) as number[]
         );
-        let d = planeData.value.d;
         while ( d * d / 2.5 < maxNodeCount) {
           d += 1;
         }
-        store.editPlaneData(planeData.value.m , d);
+        store.editPlaneData(m , d);
         return d;
       }
     };
@@ -123,7 +123,6 @@ export default defineComponent({
 
     const generateCones = (edgesData: any[], color: string, place: string) => {
       const cones = edgesData.map((edge) => {
-        const d = planeData.value.d;
         const from = edge.position.from;
         const to = edge.position.to;
         const u = to.x - from.x
@@ -151,7 +150,6 @@ export default defineComponent({
     };
     const generateSpheres = (edgesData: any[], color: string, place: string) => {
       const spheres = edgesData.map((edge) => {
-      const d = planeData.value.d;
       const from = edge.position.from;
       const to = edge.position.to;
       const vX = to.x - from.x;
@@ -182,6 +180,84 @@ export default defineComponent({
         };
       });
       return spheres;
+    };
+
+    const generateCustomArrow = (edgesData: any[]) => {
+      const arrows = [];
+      edgesData.forEach((edge) => {
+        const from = edge.position.from;
+        const to = edge.position.to;
+        const vX = to.x - from.x;
+        const vY = to.y - from.y;
+        const vZ = -(to.z - from.z) * d;
+        const toZ = (layers.value.length - to.z - 1) * d;
+        const fromZ = (layers.value.length - from.z - 1) * d;
+        const norm = Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2);
+        const scale = 0.2 / norm;
+        const adjX = vX * scale;
+        const adjY = vY * scale;
+        const adjZ = vZ * scale;
+
+        const createArrow = (baseX, baseY, baseZ, tipX, tipY, tipZ) => {
+          const normA = Math.sqrt(2 * vX ** 2 + 2 * vY ** 2 + 2 * vZ ** 2 - 2 * vX * vY - 2 * vY * vZ - 2 * vZ * vX);
+          const a = [(vY - vZ) / normA, (vZ - vX) / normA, (vX - vY) / normA];
+          const normB = Math.sqrt(2 * vX ** 2 + 2 * vY ** 2 + 2 * vZ ** 2 - 2 * vX * vY - 2 * vY * vZ - 2 * vZ * vX) * Math.sqrt(vX ** 2 + vY ** 2 + vZ ** 2);
+          const b = [(vY * (vX - vY) - vZ * (vZ - vY)) / normB, (vZ * (vY - vZ) - vX * (vX - vY)) / normB, (vX * (vZ - vX) - vY * (vY - vZ)) / normB];
+
+          const vertices = [
+            [baseX + 0.15 * a[0] + 0.15 * b[0], baseY + 0.15 * a[1] + 0.15 * b[1], baseZ + 0.15 * a[2] + 0.15 * b[2]], 
+            [baseX - 0.15 * a[0] + 0.15 * b[0], baseY - 0.15 * a[1] + 0.15 * b[1], baseZ - 0.15 * a[2] + 0.15 * b[2]], 
+            [baseX - 0.15 * a[0] - 0.15 * b[0], baseY - 0.15 * a[1] - 0.15 * b[1], baseZ - 0.15 * a[2] - 0.15 * b[2]], 
+            [baseX + 0.15 * a[0] - 0.15 * b[0], baseY + 0.15 * a[1] - 0.15 * b[1], baseZ + 0.15 * a[2] - 0.15 * b[2]],
+            [tipX, tipY, tipZ],
+          ];
+
+          const faces = [ [0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4], [0, 1, 2], [0, 2, 3]];
+          let color = "black";
+          if (edge.info?.weight === "+1") {
+            color = "lightblue";
+          } else if (edge.info?.weight === "+3") {
+            color = "blue";
+          } else if (edge.info?.weight === "-1") {
+            color = "pink";
+          } else if (edge.info?.weight === "-3") {
+            color = "red";
+          }
+
+          arrows.push({
+            type: "mesh3d",
+            x: vertices.map((v) => v[0]),
+            y: vertices.map((v) => v[1]),
+            z: vertices.map((v) => v[2]),
+            i: faces.map((f) => f[0]),
+            j: faces.map((f) => f[1]),
+            k: faces.map((f) => f[2]),
+            color: color,
+            opacity: 1,
+            hoverinfo: "none",
+            name: "arrow_body",
+          })};
+
+        if (edge.info?.direction === "forward" || edge.info?.direction === "bidirectional") {
+          const tipX = to.x - adjX;
+          const tipY = to.y - adjY;
+          const tipZ = toZ - adjZ;
+          const baseX = to.x - 4 * adjX;
+          const baseY = to.y - 4 * adjY;
+          const baseZ = toZ - 4 * adjZ;
+          createArrow(baseX, baseY, baseZ, tipX, tipY, tipZ);
+        }
+        if (edge.info?.direction === "backward" || edge.info?.direction === "bidirectional") {
+          const tipX = from.x + adjX;
+          const tipY = from.y + adjY;
+          const tipZ = fromZ + adjZ;
+          const baseX = from.x + 4 * adjX;
+          const baseY = from.y + 4 * adjY;
+          const baseZ = fromZ + 4 * adjZ;
+          createArrow(baseX, baseY, baseZ, tipX, tipY, tipZ);
+        }
+      });
+      return arrows;
     };
 
     const renderPlot = (data) => {
@@ -229,12 +305,11 @@ export default defineComponent({
     const updatePlot = () => {
       if (flag.value === 1 || flag.value === 2) {
         renderPlot(dataset);
-      } else if (flag.value === 3 || flag.value === 4) {
+      } else if (flag.value === 3 || flag.value === 4 || flag.value === 12) {
         const planes = generatePlanes(layers.value, colors.value);
         store.setAvailableGrid();
         const nodePositions = store.makeNodePositions();
         const edgePositions = store.makeEdgePositions();
-        const d = planeData.value.d;
         const dataset1 = nodePositions.map((node) => {
           const layerIndex = layers.value.indexOf(node.layer);
           const color = colors.value[layerIndex];
@@ -242,40 +317,46 @@ export default defineComponent({
           return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
         });
         const dataset2 = edgePositions.map((edge) => {
-          return { x: [edge.position.from.x, edge.position.to.x], y: [edge.position.from.y, edge.position.to.y], z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], type: "scatter3d", mode: "lines", line: { color: "black", width: 2 }, name: `${edge.key}`, hoverinfo: "none" , text: `${edge.type}`};
-        });
-        const options = edgePositions.flatMap((edge) => {
-          if (edge.type === 'follows') {
-            return generateCones([edge], 'blue', 'from');
-          } else if (edge.type === 'consists of') {
-            return generateCones([edge], 'black', 'frommiddle');
-          } else if (edge.type === 'exhibits') {
-            return generateCones([edge], 'gray', 'frommiddle');
-          } else if (edge.type === 'is') {
-            return generateCones([edge], 'white', 'tomiddle');
-          } else if (edge.type === 'handles') {
-            return generateSpheres([edge], 'black', 'to');
-          } else if (edge.type === 'requires') {
-            return generateSpheres([edge], 'white', 'from');
-          } else if (edge.type === 'consumes') {
-            return generateCones([edge], 'green', 'from');
-          } else if (edge.type === 'yields') {
-            return generateCones([edge], 'red', 'to');
-          } else if (edge.type === 'affects') {
-            return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
-          } else {
-            return generateSpheres([edge], 'red', 'to');
+          let lineColor = "black";
+          if (edge.info?.weight === "+1") {
+            lineColor = "lightblue";
+          } else if (edge.info?.weight === "+3") {
+            lineColor = "blue";
+          } else if (edge.info?.weight === "-1") {
+            lineColor = "pink";
+          } else if (edge.info?.weight === "-3") {
+            lineColor = "red";
           }
+          return { 
+            x: [edge.position.from.x, edge.position.to.x], 
+            y: [edge.position.from.y, edge.position.to.y], 
+            z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], 
+            type: "scatter3d", 
+            mode: "lines", 
+            line: { color: lineColor, width: 3 }, 
+            name: `${edge.key}`, 
+            hoverinfo: "none", 
+            text: `${edge.type}`
+          };
         });
+        const options = edgePositions.map((edge) => {
+          if (edge.info) {
+            return generateCustomArrow([edge]);
+          } else {
+            return makeOption([edge]);
+          }
+        }).flat();
         store.setDataset([...dataset1, ...planes, ...dataset2, ...options]);
         renderPlot([...dataset1, ...planes, ...dataset2, ...options]);
+        if (flag.value === 12) {
+          store.setFlag(3);
+        }
       } else if (flag.value === 9) {
         store.setFlag(3);
       } else if (flag.value === 15 || flag.value === 16) {
         const { selectedNodePositions, selectedEdgePositions } = store.selectLayer();
         const planes = generatePlanes(layers.value, colors.value);
         store.setAvailableGrid();
-        const d = planeData.value.d;
         const visibleLayers = store.visibleLayers;
         const visiblePlanes = planes.filter((plane) => visibleLayers.includes(plane.name.split(" ")[1]));
         const dataset1 = selectedNodePositions.map((node) => {
@@ -285,31 +366,35 @@ export default defineComponent({
           return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
         });
         const dataset2 = selectedEdgePositions.map((edge) => {
-          return { x: [edge.position.from.x, edge.position.to.x], y: [edge.position.from.y, edge.position.to.y], z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], type: "scatter3d", mode: "lines", line: { color: "black", width: 2 }, name: `${edge.key}`, hoverinfo: "none" , text: `${edge.type}`};
-        });
-        const options = selectedEdgePositions.flatMap((edge) => {
-          if (edge.type === 'follows') {
-            return generateCones([edge], 'blue', 'from');
-          } else if (edge.type === 'consists of') {
-            return generateCones([edge], 'black', 'frommiddle');
-          } else if (edge.type === 'exhibits') {
-            return generateCones([edge], 'gray', 'frommiddle');
-          } else if (edge.type === 'is') {
-            return generateCones([edge], 'white', 'tomiddle');
-          } else if (edge.type === 'handles') {
-            return generateSpheres([edge], 'black', 'to');
-          } else if (edge.type === 'requires') {
-            return generateSpheres([edge], 'white', 'from');
-          } else if (edge.type === 'consumes') {
-            return generateCones([edge], 'green', 'from');
-          } else if (edge.type === 'yields') {
-            return generateCones([edge], 'red', 'to');
-          } else if (edge.type === 'affects') {
-            return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
-          } else {
-            return generateSpheres([edge], 'red', 'to');
+          let lineColor = "black";
+          if (edge.info?.weight === "+1") {
+            lineColor = "lightblue";
+          } else if (edge.info?.weight === "+3") {
+            lineColor = "blue";
+          } else if (edge.info?.weight === "-1") {
+            lineColor = "pink";
+          } else if (edge.info?.weight === "-3") {
+            lineColor = "red";
           }
+          return { 
+            x: [edge.position.from.x, edge.position.to.x], 
+            y: [edge.position.from.y, edge.position.to.y], 
+            z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], 
+            type: "scatter3d", 
+            mode: "lines", 
+            line: { color: lineColor, width: 3 }, 
+            name: `${edge.key}`, 
+            hoverinfo: "none", 
+            text: `${edge.type}`
+          };
         });
+        const options = selectedEdgePositions.map((edge) => {
+          if (edge.info) {
+            return generateCustomArrow([edge]);
+          } else {
+            return makeOption([edge]);
+          }
+        }).flat();
         renderPlot([...dataset1, ...visiblePlanes, ...dataset2, ...options]);
       }
     };
@@ -326,49 +411,90 @@ export default defineComponent({
       }
     });
 
-    const choosePoint = () => {
+    const makeOption = (edges) => {
+      return edges.flatMap((edge) => {
+        switch (edge.type) {
+          case 'follows':
+            return generateCones([edge], 'blue', 'from');
+          case 'consists of':
+            return generateCones([edge], 'black', 'frommiddle');
+          case 'exhibits':
+            return generateCones([edge], 'gray', 'frommiddle');
+          case 'is':
+            return generateCones([edge], 'white', 'tomiddle');
+          case 'handles':
+            return generateSpheres([edge], 'black', 'to');
+          case 'requires':
+            return generateSpheres([edge], 'white', 'from');
+          case 'consumes':
+            return generateCones([edge], 'green', 'from');
+          case 'yields':
+            return generateCones([edge], 'red', 'to');
+          case 'affects':
+            return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
+          default:
+            return generateSpheres([edge], 'red', 'to');
+        }
+      });
+    };
+
+    const choosePoint = ( pointNumber: number ) => {
       if (plotlyChart.value) {
         const updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
         updatedData.forEach((trace, index) => {
           if (trace.type === 'scatter3d' && trace.mode === 'markers+text') {
             if (index === selectedTraceIndex.value) {
               const planes = generatePlanes(layers.value, colors.value);
-              const { nodes, edges } = store.filterNodesAndEdges( {  x: trace.x[0], y: trace.y[0], z: trace.z[0] } );
+              const z = layers.value.length - (trace.z[0] / d) - 1;
+              const { nodes, edges } = store.filterNodesAndEdges({ x: trace.x[0], y: trace.y[0], z: z }, pointNumber);
               const dataset3 = nodes.map((node) => {
                 const layerIndex = layers.value.indexOf(node.layer);
                 const color = colors.value[layerIndex];
-                return { x: [node.position.x], y: [node.position.y], z: [node.position.z], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
+                return {
+                  x: [node.position.x],
+                  y: [node.position.y],
+                  z: [d * (layers.value.length - node.position.z - 1)],
+                  type: "scatter3d",
+                  mode: 'markers+text',
+                  marker: { size: 5, color: color },
+                  name: node.name,
+                  text: node.name
+                };
               });
               const dataset4 = edges.map((edge) => {
-                return { x: [edge.position.from.x, edge.position.to.x], y: [edge.position.from.y, edge.position.to.y], z: [edge.position.from.z, edge.position.to.z], type: "scatter3d", mode: "lines", line: { color: "black", width: 2 }, name: `${edge.key}`, hoverinfo: "none" , text: `${edge.type}`};
-              });
-              const options2 = edges.flatMap((edge) => {
-                if (edge.type === 'follows') {
-                  return generateCones([edge], 'blue', 'from');
-                } else if (edge.type === 'consists of') {
-                  return generateCones([edge], 'black', 'frommiddle');
-                } else if (edge.type === 'exhibits') {
-                  return generateCones([edge], 'gray', 'frommiddle');
-                } else if (edge.type === 'is') {
-                  return generateCones([edge], 'white', 'tomiddle');
-                } else if (edge.type === 'handles') {
-                  return generateSpheres([edge], 'black', 'to');
-                } else if (edge.type === 'requires') {
-                  return generateSpheres([edge], 'white', 'from');
-                } else if (edge.type === 'consumes') {
-                  return generateCones([edge], 'white', 'from');
-                } else if (edge.type === 'yields') {
-                  return generateCones([edge], 'white', 'to');
-                } else if (edge.type === 'affects') {
-                  return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
-                } else {
-                  return generateSpheres([edge], 'red', 'to');
+                let lineColor = "black";
+                if (edge.info?.weight === "+1") {
+                  lineColor = "lightblue";
+                } else if (edge.info?.weight === "+3") {
+                  lineColor = "blue";
+                } else if (edge.info?.weight === "-1") {
+                  lineColor = "pink";
+                } else if (edge.info?.weight === "-3") {
+                  lineColor = "red";
                 }
+                return { 
+                  x: [edge.position.from.x, edge.position.to.x], 
+                  y: [edge.position.from.y, edge.position.to.y], 
+                  z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], 
+                  type: "scatter3d", 
+                  mode: "lines", 
+                  line: { color: lineColor, width: 3 }, 
+                  name: `${edge.key}`, 
+                  hoverinfo: "none", 
+                  text: `${edge.type}`
+                };
               });
+              const options2 = edges.map((edge) => {
+                if (edge.info) {
+                  return generateCustomArrow([edge]);
+                } else {
+                  return makeOption([edge]);
+                }
+              }).flat();
               Plotly.react(plotlyChart.value, [...dataset3, ...planes, ...dataset4, ...options2], {
-                scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }},
+                scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false } },
                 hovermode: "false",
-                margin: { l: 10, r: 10,  t: 10,  b: 10},
+                margin: { l: 10, r: 10, t: 10, b: 10 },
                 showlegend: false,
                 paper_bgcolor: "gray",
               });
@@ -378,6 +504,7 @@ export default defineComponent({
         });
       }
     };
+
     const resetChoosePoint = () => {
       if (plotlyChart.value) {
         const updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
@@ -391,7 +518,6 @@ export default defineComponent({
         store.setFlag(3);
       }
     };
-
     const crossKeyClick = (direction: string) => {
       if (plotlyChart.value) {
         let updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
@@ -400,10 +526,8 @@ export default defineComponent({
             if (index === selectedTraceIndex.value) {
               const x = trace.x[0];
               const y = trace.y[0];
-              const d = planeData.value.d;
               const z = layers.value.length - (trace.z[0]/d) - 1;
               const oldPosition = { x, y, z };
-              console.log(oldPosition);
               if (direction === 'up') {
                 if (availableGrid.value.some((grid) => grid.x === x && grid.y === y + 1 && grid.z === z)) {
                   trace.y[0] = y + 1;
@@ -440,29 +564,13 @@ export default defineComponent({
                 }
               });
               const edgePositions = store.edgePositions;
-              const newoptions = edgePositions.flatMap((edge) => {
-                if (edge.type === 'follows') {
-                  return generateCones([edge], 'blue', 'from');
-                } else if (edge.type === 'consists of') {
-                  return generateCones([edge], 'black', 'frommiddle');
-                } else if (edge.type === 'exhibits') {
-                  return generateCones([edge], 'gray', 'frommiddle');
-                } else if (edge.type === 'is') {
-                  return generateCones([edge], 'white', 'tomiddle');
-                } else if (edge.type === 'handles') {
-                  return generateSpheres([edge], 'black', 'to');
-                } else if (edge.type === 'requires') {
-                  return generateSpheres([edge], 'white', 'from');
-                } else if (edge.type === 'consumes') {
-                  return generateCones([edge], 'green', 'from');
-                } else if (edge.type === 'yields') {
-                  return generateCones([edge], 'red', 'to');
-                } else if (edge.type === 'affects') {
-                  return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
+              const newoptions = edgePositions.map((edge) => {
+                if (edge.info) {
+                  return generateCustomArrow([edge]);
                 } else {
-                  return generateSpheres([edge], 'red', 'to');
+                  return makeOption([edge]);
                 }
-              });
+              }).flat();
               const updatedData2 = updatedData.filter((trace) => !trace.name.startsWith('cone') && !trace.name.startsWith('sphere'));
               updatedData2.push(...newoptions);
               updatedData = updatedData2;
@@ -485,7 +593,7 @@ export default defineComponent({
         const updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
         updatedData.forEach((trace, index) => {
           if (trace.type === 'scatter3d' && trace.mode === 'markers+text') {
-            const i = layers.value.length - (trace.z[0] / planeData.value.d) - 1;
+            const i = layers.value.length - (trace.z[0] / d) - 1;
             const color = colors.value[i];
             trace.marker.color = index === selectedTraceIndex.value ? color : trace.marker.color;
           }
@@ -507,6 +615,7 @@ export default defineComponent({
       confirmMoving,
       choosePoint,
       resetChoosePoint,
+      pointNumber,
     };
   },
   components: {
@@ -551,6 +660,7 @@ canvas {
   border: 5px solid c.$blue;
   background-color: c.$gray-light;
   display: flex;
+  flex-flow: column;
   justify-content: center;
   align-items: center;
 
@@ -561,10 +671,21 @@ canvas {
     cursor: pointer;
     font-size: 18px;
     border-radius: 4px;
-    height: 75%;
-    width: 75%;
+    height: 50%;
+    width: 50%;
     &:hover {
       background-color: c.$maroon;
+    }
+  }
+  & input {
+    width: 50%;
+    height: 20px;
+    border: 1px solid c.$black;
+    border-radius: 4px;
+    text-align: center;
+    margin: 10px 0 0 0;
+    &:focus {
+      border: 1px solid c.$maroon;
     }
   }
 }

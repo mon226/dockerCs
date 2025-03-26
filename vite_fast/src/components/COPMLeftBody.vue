@@ -166,7 +166,7 @@
         </div>
         <AH2 h2Title="Edge List" :content="'edges'" />
         <ul>
-          <li v-for="(edge, index) in sortedEdges" :key="index">
+          <li v-for="(edge, index) in sortedEdges" :key="index" :style="{ position: 'relative'}">
             <span class="longKey">
               <div class="edgeName">
                 {{ edge.edge.fromname }}
@@ -176,6 +176,33 @@
                 {{ edge.edge.toname }}
               </div>
             </span>
+            <div>
+              <button 
+                style="background: none; border: none; padding: 0; cursor: pointer; height: 25px; margin-right: 0.5rem;"
+                @click="editingEdgeKey = edge.key"
+              >
+                <font-awesome-icon 
+                  :icon="['fas', 'up-right-from-square']"
+                  style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+                />
+              </button>
+              <div 
+                class="edgeInfoWrapper"
+                v-if="editingEdgeKey === edge.key" 
+                :style="{ border: `4px solid ${edgeTypesColor[edgeTypes.indexOf(edge.type)]}`, padding: '0.5rem', margin: '0 0.1rem', position: 'absolute', top: '0', left: '50px', backgroundColor: '#f3f3f3', color: '#0d0d0d', width: '300px', zIndex: '100000', height: '100px'}"
+                >
+                <AEdgeInformation :edge="edge" v-model:editingEdgeKey="editingEdgeKey" />
+                <button 
+                  style="background: none; border: none; padding: 0; cursor: pointer; height: 25px; margin-right: 0.5rem; position: absolute; top: 0; right: 0;"
+                  @click="editingEdgeKey = ''"
+                >
+                  <font-awesome-icon 
+                    :icon="['fas', 'circle-xmark']"
+                    style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+                  />
+                </button>
+              </div>
+            </div>
             <button @click="removeEdge(edge.key)" class="delete-btn">×</button>
           </li>
         </ul>
@@ -192,6 +219,7 @@ import AH2 from '@/components/atoms/AH2.vue';
 import AColorSetting from '@/components/atoms/AColorSetting.vue';
 import { useNetworkDataStore } from "@/stores/networkData";
 import { computed } from 'vue';
+import AEdgeInformation from './atoms/AEdgeInformation.vue';
 
 export default defineComponent({
   props: {
@@ -222,7 +250,7 @@ export default defineComponent({
     const edgeType = ref('');
     const edgeTo = ref('');
     const edgeTypes = ["consists of", "follows",  "exhibits",  "is",  "handles",  "requires",  "consumes",  "yields",  "affects"];
-    const edgeTypesColor = ["#262730", "#5d98b0", "#26273033", "#f3f3f3", "#f4da24", "#e0815e", "#2e9058", "#b61f22", "#731a3d"];
+    const edgeTypesColor = ["#262730", "blue", "#26273033", "#f3f3f3", "#f4da24", "#e0815e", "#2e9058", "#b61f22", "#731a3d"];
     const edges = computed(() => store.edges);
     const canMakeNewEdge = computed(() => nodes.value.length > 1);
     const canImportOPL = ref(false);
@@ -239,6 +267,7 @@ export default defineComponent({
     const aColorSettingList = ref(new Array(layersCopy.value.length).fill(false));
     const editingNodeKey = ref("");
     const editedKey = ref("");
+    const editingEdgeKey = ref("");
 
     const toggleMenu = () => {
       isMenuOpen.value = !isMenuOpen.value;
@@ -338,7 +367,7 @@ export default defineComponent({
       let textColor = "#0d0d0d";
       let border = "";
 
-      if (backgroundColor === "#262730" || backgroundColor === "#26273033" || backgroundColor === "#731a3d") {
+      if (backgroundColor === "#262730" || backgroundColor === "#26273033" || backgroundColor === "#731a3d"|| backgroundColor === "blue") {
         textColor = "#f3f3f3";
       } else if (backgroundColor === "#f3f3f3") {
         border = "1px solid #0d0d0d";
@@ -539,13 +568,15 @@ export default defineComponent({
       flag,
       edgeTypesColor,
       getEdgeTypeStyle,
-      getNodeStyle
+      getNodeStyle,
+      editingEdgeKey
     };
   },
   components: {
     AH1,
     AH2,
-    AColorSetting
+    AColorSetting,
+    AEdgeInformation
   },
   computed: {
     sortedNodes() {
@@ -769,6 +800,9 @@ input {
   & li {
     min-width: 95%;
     display: flex;
+  }
+  & .longKey {
+    margin-right: 1rem;
   }
   & button {
     margin-left: 2.5px;

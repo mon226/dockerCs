@@ -1,13 +1,12 @@
-import { set } from "@vueuse/core";
+import { directiveHooks, set } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { ref, watch, reactive } from "vue";
 import { reviseData } from "./versionManager";
-import { layer } from "@fortawesome/fontawesome-svg-core";
 
 const layers = ref(["business", "process", "object", "variable", "cost"]);
 const flag = ref(0);
 const nodes = ref<{ key: string; node: { name: string; layer: string } }[]>([]);
-const edges = ref<{ key: string; type: string;  edge: { fromkey: string; fromname: string; fromlayer: string; tokey: string; toname: string; tolayer: string } }[]>([]);
+const edges = ref<{ key: string; type: string;  edge: { fromkey: string; fromname: string; fromlayer: string; tokey: string; toname: string; tolayer: string } ;   info?: { direction: string; weight: string; };}[]>([]);
 const colors = ref(["#CC7F30", "#3bc3ff", "#70e483", "#731A3D", "#F4DA24"]);
 const colorList = ref(["#CC7F30", "#3bc3ff", "#70e483", "#731A3D", "#F4DA24"]);
 const half = ref(0);
@@ -225,7 +224,7 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
 const addEdge = (fromkey: string, fromname: string, fromlayer: string, tokey: string, toname: string, tolayer: string, edgetype: string) => {
   const key = `${fromkey} --(${edgetype})-> ${tokey}`;
   if (!edges.value.find(edge => edge.key === key)) {
-    edges.value.push({ key, type: edgetype, edge: { fromkey, fromname, fromlayer, tokey, toname, tolayer } });
+    edges.value.push({ key, type: edgetype, edge: { fromkey, fromname, fromlayer, tokey, toname, tolayer }});
     newEdges.value.push({ key, type: edgetype, edge: { fromkey, fromname, fromlayer, tokey, toname, tolayer } });
   } else {
     console.warn("Edge already exists with key:", key);
@@ -267,7 +266,7 @@ const setAvailableGrid = () => {
 
 
 const nodePositions: { key: string; position: { x: number; y: number; z: number }, name: string, layer: string }[] = [];
-const edgePositions: { key: string; position: { from : { x: number; y: number; z: number }, to: { x: number; y: number; z: number } }, fromname: string, fromlayer: string, toname: string, tolayer: string, type: string }[] = [];
+const edgePositions: { key: string; position: { from : { x: number; y: number; z: number }, to: { x: number; y: number; z: number } }, fromname: string, fromlayer: string, toname: string, tolayer: string, type: string, info?: { direction: string; weight: string; }; }[] = [];
 
 const makeNodePositions = ( ) => {
   if (newNodes.value.length !== 0) {
@@ -305,7 +304,6 @@ const makeEdgePositions = ( ) => {
   }
 }
 
-//まだ
 const changeNodePositions = (oldPosition: { x: number; y: number; z: number }, newPosition: { x: number; y: number; z: number }) => {
   const node = nodePositions.find(node => node.position.x === oldPosition.x && node.position.y === oldPosition.y && node.position.z === oldPosition.z);
   if (node) {
@@ -314,7 +312,6 @@ const changeNodePositions = (oldPosition: { x: number; y: number; z: number }, n
   return nodePositions;
 }
 
-//まだ
 const changeEdgePositions = (oldPosition: { from : { x: number; y: number; z: number }, to: { x: number; y: number; z: number } }, newPosition: { from : { x: number; y: number; z: number }, to: { x: number; y: number; z: number } }) => {
   const edge = edgePositions.find(edge => edge.position.from.x === oldPosition.from.x && edge.position.from.y === oldPosition.from.y && edge.position.from.z === oldPosition.from.z && edge.position.to.x === oldPosition.to.x && edge.position.to.y === oldPosition.to.y && edge.position.to.z === oldPosition.to.z);
   if (edge) {
@@ -323,52 +320,58 @@ const changeEdgePositions = (oldPosition: { from : { x: number; y: number; z: nu
   return edgePositions;
 }
 
-//まだ
-const filterNodesAndEdges = (startPosition: { x: number; y: number; z: number }) => {
-  const visitedNodes = new Set<string>();
+const filterNodesAndEdges = ( startPosition: { x: number; y: number; z: number },  pointNumber: number) => {
+  const visitedNodes = new Map<string, number>(); 
   const visitedEdges = new Set<string>();
   const resultNodes: typeof nodePositions = [];
   const resultEdges: typeof edgePositions = [];
-  const queue: { x: number; y: number; z: number }[] = [startPosition];
+  const queue: { position: { x: number; y: number; z: number }; step: number }[] = [{ position: startPosition, step: 0 }];
 
   while (queue.length > 0) {
-    const currentPosition = queue.shift();
-
+    const { position, step } = queue.shift()!;
+    if (step > pointNumber) continue;
     const currentNode = nodePositions.find(
       (node) =>
-        node.position.x === currentPosition?.x &&
-        node.position.y === currentPosition?.y &&
-        node.position.z === currentPosition?.z
+        node.position.x === position.x &&
+        node.position.y === position.y &&
+        node.position.z === position.z
     );
-
     if (currentNode && !visitedNodes.has(currentNode.key)) {
-      visitedNodes.add(currentNode.key);
+      visitedNodes.set(currentNode.key, step);
       resultNodes.push(currentNode);
       edgePositions.forEach((edge) => {
-        if (
-          !visitedEdges.has(edge.key) &&
-            ((edge.position.from.x === currentPosition?.x &&
-              edge.position.from.y === currentPosition?.y &&
-              edge.position.from.z === currentPosition?.z) ||
-            (edge.position.to.x === currentPosition?.x &&
-              edge.position.to.y === currentPosition?.y &&
-              edge.position.to.z === currentPosition?.z)
-          )) {
-          visitedEdges.add(edge.key);
-          resultEdges.push(edge);
-          const nextPosition =
-            edge.position.from.x === currentPosition?.x &&
-            edge.position.from.y === currentPosition?.y &&
-            edge.position.from.z === currentPosition?.z
-              ? edge.position.to
-              : edge.position.from;
-          queue.push(nextPosition); 
+        const fromNode = edge.position.from;
+        const toNode = edge.position.to;
+        const isCurrentFrom = fromNode.x === position.x && fromNode.y === position.y && fromNode.z === position.z;
+        const isCurrentTo = toNode.x === position.x && toNode.y === position.y && toNode.z === position.z;
+
+        if (isCurrentFrom || isCurrentTo) {
+          const nextPosition = isCurrentFrom ? toNode : fromNode;
+          const nextNode = nodePositions.find(
+            (node) =>
+              node.position.x === nextPosition.x &&
+              node.position.y === nextPosition.y &&
+              node.position.z === nextPosition.z
+          );
+          if (nextNode && !visitedNodes.has(nextNode.key)) {
+            queue.push({ position: nextPosition, step: step + 1 });
+          }
+          if (
+            !visitedEdges.has(edge.key) &&
+            visitedNodes.has(currentNode.key) &&
+            nextNode &&
+            visitedNodes.has(nextNode.key)
+          ) {
+            visitedEdges.add(edge.key);
+            resultEdges.push(edge);
+          }
         }
       });
     }
   }
   return { nodes: resultNodes, edges: resultEdges };
 };
+
 
 const setPopup = ( command : string) => {
   if (command ==="open") {
@@ -411,7 +414,12 @@ const handleFileUpload = (file: File) => {
       });
       let edgePositionsFromFile = data.edgePositions;
       edgePositionsFromFile.forEach((edge: any) => {
-        edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type });
+        if (edge.info) {
+          edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type, info: { direction: edge.info.direction, weight: edge.info.weight } });
+        }
+        else {
+          edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type });
+        }
       });
       colorList.value = data.colorList;
       colorList.value = data.colorList;
@@ -452,7 +460,11 @@ const importProjectFromNeo4j = (data: any) => {
   });
   let edgePositionsFromFile = parsedData.edgePositions;
   edgePositionsFromFile.forEach((edge: any) => {
-    edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type });
+    if (edge.info) {
+      edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type, info: { direction: edge.info.direction, weight: edge.info.weight } });
+    } else {
+    edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type});
+    }
   });
   setFlag(9);
 }
@@ -524,9 +536,52 @@ const setVisibleLayers = (layers: string[]) => {
   visibleLayers.value = layers;
 }
 
+const setEdgeInfo = (key: string, direction: string, weight: string) => {
+  const edge = edges.value.find(edge => edge.key === key);
+  if (edge) {
+    edge.info = { direction, weight };
+  }
+  const edgePosition = edgePositions.find(edge => edge.key === key);
+  if (edgePosition) {
+    edgePosition.info = { direction, weight };
+  }
+  setFlag(12);
+}
+
+const deleteEdgeInfo = (key: string) => {
+  const edge = edges.value.find(edge => edge.key === key);
+  if (edge) {
+    edge.info = undefined;
+  }
+  const edgePosition = edgePositions.find(edge => edge.key === key);
+  if (edgePosition) {
+    edgePosition.info = undefined;
+  }
+  setFlag(12);
+}
+
+const converter = (value: string ) => {
+  if (typeof value === "string") {
+    if (value === "→") {
+      return "forward";
+    } else if (value === "←") {
+      return "backward";
+    } else if (value === "↔︎") {
+      return "bidirectional";
+    } else if (value === "forward") {
+      return "→";
+    } else if (value === "backward") {
+      return "←";
+    } else if (value === "bidirectional") {
+      return "↔︎";
+    } 
+  }
+  return value;
+};
+
 export const useNetworkDataStore = defineStore("networkData", () => {
   return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, 
     availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, 
     makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, 
-    setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions, calculateDistance, selectLayer, setVisibleLayers, visibleLayers };
+    setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions, calculateDistance, selectLayer, setVisibleLayers, visibleLayers , setEdgeInfo, converter, deleteEdgeInfo };
 });
