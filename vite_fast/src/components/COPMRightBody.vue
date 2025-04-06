@@ -22,7 +22,6 @@
     <div ref="plotlyChart" class="plotlyChart">
     </div>
   </div>
-
 </template>
 
 
@@ -48,6 +47,7 @@ export default defineComponent({
     let d = planeData.value.d;
     let m = planeData.value.m;
     const pointNumber = ref(2);
+    const cameraData = ref<string[]>([]);
 
     const calculatePlaneSize = () => {
       if ( nodes.value.length === 0 ) {
@@ -139,7 +139,7 @@ export default defineComponent({
               { x: [(from.x + to.x) / 2], y: [(from.y + to.y) / 2], z: [(toZ + fromZ) / 2], u: [-u], v: [-v], w: [-w] }),
           colorscale: [[0, color], [1, color]],
           sizemode: "absolute", 
-          sizeref: 0.5,
+          sizeref: 0.4,
           anchor: "tip",
           showscale: false,
           hoverinfo: "none",
@@ -148,6 +148,8 @@ export default defineComponent({
       });
       return cones;
     };
+
+
     const generateSpheres = (edgesData: any[], color: string, place: string) => {
       const spheres = edgesData.map((edge) => {
       const from = edge.position.from;
@@ -263,21 +265,94 @@ export default defineComponent({
     const renderPlot = (data) => {
       if (plotlyChart.value) {
         const plotlyElement = plotlyChart.value;
-        plotlyElement.addEventListener('wheel', (event) => {
-          
+        if ((plotlyChart.value as any).layout) {
+          cameraData.value = (plotlyChart.value as any).layout.scene.camera;
+        }
+        plotlyElement.addEventListener('wheel', (event) => {  
         }, { passive: true });
         Plotly.newPlot(plotlyChart.value, data, {
-          scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }},
+            scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }, 
+            ...(cameraData.value ? { camera: cameraData.value } : {})},
           hovermode: "false",
           margin: { l: 10, r: 10,  t: 10,  b: 10},
           showlegend: false,
           paper_bgcolor: "gray",
         });
+        const updateSize = () => {
+          if (!plotlyChart.value) return;
+          const layout = (plotlyChart.value as any).layout;
+          if (!layout?.scene?.camera) return;
+          const cameraEye = layout.scene.camera.eye;
+          const eyeVector = { x: cameraEye.x, y: cameraEye.y, z: cameraEye.z };
+          const center = layout.scene.camera.center;
+          const distance = Math.sqrt(
+            (eyeVector.x - center.x) ** 2 +
+            (eyeVector.y - center.y) ** 2 +
+            (eyeVector.z - center.z) ** 2
+          );
+          data.forEach((trace) => {
+            if (trace.type === "scatter3d" && trace.mode === "markers+text") {
+                if (distance >= 4) {
+                trace.marker.size = 1;
+                } else if (distance >= 3) {
+                trace.marker.size = 2;
+                } else if (distance >= 2) {
+                trace.marker.size = 3;
+                } else if (distance >= 1) {
+                trace.marker.size = 4;
+                } else {
+                trace.marker.size = 5;
+                }
+            }
+            if (trace.type === "cone") {
+              if (distance < 0.5) {
+                trace.sizeref = 0.2;
+              } else if (distance < 1) {
+                trace.sizeref = 0.25;
+              } else if (distance < 1.5) {
+                trace.sizeref = 0.3;
+              } else if (distance < 2) {
+                trace.sizeref = 0.4;
+              } else if (distance < 3) {
+                trace.sizeref = 0.5;
+              } else if (distance < 4) {
+                trace.sizeref = 0.5;
+              } else {
+                trace.sizeref = 0.6;
+              }
+            }
+            if (trace.type === "scatter3d" && trace.mode === "lines") {
+              if (distance < 2.5) {
+                trace.line.width = 3;
+              } else {
+                trace.line.width = 1;
+              }
+            }
+            // distanceが3以上の時はmarkers+textのtextを非表示にする
+            if (distance >= 3) {
+              trace.text = "";
+            } else {
+              trace.text = trace.name;
+            }
+          });
+
+          Plotly.react(plotlyChart.value, data, layout);
+        };
+        /*
+        (plotlyChart.value as any).on("plotly_relayout", () => {
+          updateSize();
+        });
+        */
         plotlyChart.value.addEventListener(
           "touchstart",
           (e) => e.preventDefault(),
           { passive: true }
         );
+        (plotlyChart.value as any).on("plotly_relayout", (eventData: { [key: string]: any }) => {
+          if (eventData["scene.camera"]) {
+            cameraData.value = eventData["scene.camera"];
+          }
+        });
         (plotlyChart.value as any).on("plotly_click", (event: any) => {
           const pointData = event.points[0];
           const dataType = pointData.data.type;
@@ -285,14 +360,14 @@ export default defineComponent({
           if (dataType === "scatter3d" && mode === "markers+text" && ( flag.value === 3 || flag.value === 4 || flag.value === 6) ) {
             selectedTraceIndex.value = event.points[0].curveNumber;
             store.setFlag(5);
-            const updatedData = [...data]; 
+            const updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
             updatedData.forEach((trace, index) => {
               if (trace.type === 'scatter3d' && trace.mode === 'markers+text') {
                 trace.marker.color = index === selectedTraceIndex.value ? 'red' : trace.marker.color;
               }
             });
             Plotly.react(plotlyChart.value, updatedData, {
-              scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }},
+              scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }, camera: cameraData.value},
               hovermode: "false",
               margin: { l: 10, r: 10,  t: 10,  b: 10},
               showlegend: false,
@@ -314,7 +389,7 @@ export default defineComponent({
           const layerIndex = layers.value.indexOf(node.layer);
           const color = colors.value[layerIndex];
           store.removeAvailableGrid(node.position.x, node.position.y, node.position.z);
-          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
+          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 4, color: color }, name: node.name, text: node.name };
         });
         const dataset2 = edgePositions.map((edge) => {
           let lineColor = "black";
@@ -363,7 +438,7 @@ export default defineComponent({
           const layerIndex = layers.value.indexOf(node.layer);
           const color = colors.value[layerIndex];
           store.removeAvailableGrid(node.position.x, node.position.y, node.position.z);
-          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 5, color: color }, name: node.name, text: node.name };
+          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 4, color: color }, name: node.name, text: node.name };
         });
         const dataset2 = selectedEdgePositions.map((edge) => {
           let lineColor = "black";
@@ -456,7 +531,7 @@ export default defineComponent({
                   z: [d * (layers.value.length - node.position.z - 1)],
                   type: "scatter3d",
                   mode: 'markers+text',
-                  marker: { size: 5, color: color },
+                  marker: { size: 4, color: color },
                   name: node.name,
                   text: node.name
                 };
@@ -492,12 +567,13 @@ export default defineComponent({
                 }
               }).flat();
               Plotly.react(plotlyChart.value, [...dataset3, ...planes, ...dataset4, ...options2], {
-                scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false } },
+                scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }, camera: cameraData.value },
                 hovermode: "false",
                 margin: { l: 10, r: 10, t: 10, b: 10 },
                 showlegend: false,
                 paper_bgcolor: "gray",
               });
+              cameraData.value = (plotlyChart.value as any).layout.scene.camera;
               store.setFlag(7);
             }
           }
@@ -509,12 +585,13 @@ export default defineComponent({
       if (plotlyChart.value) {
         const updatedData = Array.isArray(dataset.value) ? [...dataset.value] : [];
         Plotly.react(plotlyChart.value, updatedData, {
-          scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }},
+          scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }, camera: cameraData.value },
           hovermode: "false",
           margin: { l: 10, r: 10,  t: 10,  b: 10},
           showlegend: false,
           paper_bgcolor: "gray",
         });
+        cameraData.value = (plotlyChart.value as any).layout.scene.camera;
         store.setFlag(3);
       }
     };
@@ -574,16 +651,18 @@ export default defineComponent({
               const updatedData2 = updatedData.filter((trace) => !trace.name.startsWith('cone') && !trace.name.startsWith('sphere'));
               updatedData2.push(...newoptions);
               updatedData = updatedData2;
+              store.setDataset(updatedData);
             }
           }
         });
         Plotly.react(plotlyChart.value, updatedData, {
-          scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }},
+          scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false },camera: cameraData.value},
           hovermode: "false",
           margin: { l: 10, r: 10,  t: 10,  b: 10},
           showlegend: false,
           paper_bgcolor: "gray",
         });
+        cameraData.value = (plotlyChart.value as any).layout.scene.camera;
         store.setDataset(updatedData);
       }
     };
@@ -599,12 +678,13 @@ export default defineComponent({
           }
         });
         Plotly.react(plotlyChart.value, updatedData, {
-          scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }},
+          scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false },camera: cameraData.value},
           hovermode: "false",
           margin: { l: 10, r: 10,  t: 10,  b: 10},
           showlegend: false,
           paper_bgcolor: "gray",
         });
+        cameraData.value = (plotlyChart.value as any).layout.scene.camera;
         store.setDataset(updatedData);
       }
     };
@@ -616,6 +696,7 @@ export default defineComponent({
       choosePoint,
       resetChoosePoint,
       pointNumber,
+      cameraData,
     };
   },
   components: {

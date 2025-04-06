@@ -605,7 +605,7 @@ export default defineComponent({
 <style lang="scss">
 @use "@/assets/style/color" as c;
 .OPMsetting {
-  width: 95%;
+  width: 100%;
   min-height: 85vh;
   background-color: #f3f3f3CC;
   border: 5px solid c.$blue;

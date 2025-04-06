@@ -44,7 +44,7 @@ export default defineComponent({
   width: calc(100vw);
   position: relative;
   overflow-y: auto;
-  padding: 0 5vw;
+  padding: 0 3vw;
   padding-top: 2vh;
 }
 

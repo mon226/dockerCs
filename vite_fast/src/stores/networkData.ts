@@ -173,6 +173,12 @@ const addNode = (name: string, layer: string) => {
   }
 };
 const removeNode = (key: string) => {
+  edgePositions.forEach(edge => {
+    if ((edge.fromname === nodes.value.find(node => node.key === key)?.node.name && edge.fromlayer === nodes.value.find(node => node.key === key)?.node.layer) || (edge.toname === nodes.value.find(node => node.key === key)?.node.name && edge.tolayer === nodes.value.find(node => node.key === key)?.node.layer)) {
+      edgePositions.splice(edgePositions.findIndex(edgePosition => edgePosition.key === edge.key), 1);
+    }
+  });
+  edges.value = edges.value.filter(edge => edge.edge.fromkey !== key && edge.edge.tokey !== key);
   nodes.value = [...nodes.value.filter(node => node.key !== key)];
   nodePositions.splice(nodePositions.findIndex(node => node.key === key), 1);
 }
@@ -294,7 +300,7 @@ const makeEdgePositions = ( ) => {
       if (fromNode && toNode) {
       edgePositions.push({ key: edge.key, position: { from: fromNode.position, to: toNode.position }, fromname: edge.edge.fromname, fromlayer: edge.edge.fromlayer, toname: edge.edge.toname, tolayer: edge.edge.tolayer, type: edge.type });
       } else {
-      console.warn("Edge references undefined node(s):", edge);
+      console.warn("Edge references undefined node(s):", edge, nodePositions);
       }
     });
     newEdges.value = [];

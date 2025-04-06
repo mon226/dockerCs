@@ -54,7 +54,7 @@ export default defineComponent({
       return acc;
       }, []);
       if ( visibleLayers.length === layers.value.length) {
-        store.setFlag(3);
+        store.setFlag(12);
       } else {
         store.setVisibleLayers(visibleLayers);
         if (flag.value === 15) {
