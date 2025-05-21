@@ -185,30 +185,24 @@ const removeNode = (key: string) => {
 
 const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
   const newKey = `${newName} ( ${newLayer} )`;
-  
-  // ノードの更新前に、このキーを持つノードが既に存在するかチェック
+
   if (nodes.value.find(node => node.key === newKey && node.key !== oldKey)) {
     console.warn("Node already exists with key:", newKey);
-    return false; // 更新を中止し、失敗を示す
+    return false; 
   }
-  
-  // ノードの更新
+
   const node = nodes.value.find(node => node.key === oldKey);
   if (!node) {
     console.warn("Node not found with key:", oldKey);
-    return false; // 更新を中止し、失敗を示す
+    return false; 
   }
   
-  // 変更前のノード情報をログに記録
-  console.log("更新前のノード:", JSON.stringify(node));
+  // console.log("更新前のノード:", JSON.stringify(node));
   
-  // ノード情報を更新
   node.key = newKey;
   node.node.name = newName;
   node.node.layer = newLayer;
   
-  // nodePositionsの更新 - 重複キーの問題解決
-  // すべての一致する要素のインデックスを取得
   const allMatchingIndices: number[] = [];
   nodePositions.forEach((pos, index) => {
     if (pos.key === oldKey) {
@@ -216,15 +210,11 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
     }
   });
 
-  console.log(`nodePositions内で '${oldKey}' と一致する要素数: ${allMatchingIndices.length}`);
-  console.log("一致するインデックス:", allMatchingIndices);
+  // console.log(`nodePositions内で '${oldKey}' と一致する要素数: ${allMatchingIndices.length}`);
+  // console.log("一致するインデックス:", allMatchingIndices);
 
   if (allMatchingIndices.length > 0) {
-    // 最初の一致要素は更新
     const nodePositionIndex = allMatchingIndices[0];
-    console.log("更新前のノード位置:", JSON.stringify(nodePositions[nodePositionIndex]));
-    
-    // 位置情報を更新 (参照ではなくオブジェクト自体を更新)
     nodePositions[nodePositionIndex] = {
       ...nodePositions[nodePositionIndex],
       name: newName,
@@ -232,12 +222,9 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
       layer: newLayer
     };
     
-    console.log("更新後のノード位置:", JSON.stringify(nodePositions[nodePositionIndex]));
-    
-    // 残りの重複要素は削除（先頭から削除すると残りのインデックスがずれるため、後ろから削除）
     if (allMatchingIndices.length > 1) {
       for (let i = allMatchingIndices.length - 1; i > 0; i--) {
-        console.log(`重複したノード位置を削除 (インデックス ${allMatchingIndices[i]}):`);
+        // console.log(`重複したノード位置を削除 (インデックス ${allMatchingIndices[i]}):`);
         nodePositions.splice(allMatchingIndices[i], 1);
       }
     }
@@ -245,13 +232,11 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
     console.warn("Node position not found with key:", oldKey);
   }
   
-  // エッジの更新
   let edgesUpdated = 0;
   edges.value.forEach(edge => {
     let edgeUpdated = false;
     let oldEdgeKey = edge.key;
     
-    // fromノードの更新
     if (edge.edge.fromkey === oldKey) {
       edge.edge.fromkey = newKey;
       edge.edge.fromname = newName;
@@ -259,21 +244,18 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
       edgeUpdated = true;
     }
     
-    // toノードの更新
     if (edge.edge.tokey === oldKey) {
       edge.edge.tokey = newKey;
       edge.edge.toname = newName;
       edge.edge.tolayer = newLayer;
       edgeUpdated = true;
     }
-    
-    // エッジキーの更新
+
     if (edgeUpdated) {
       const newEdgeKey = `${edge.edge.fromkey} --(${edge.type})-> ${edge.edge.tokey}`;
       edge.key = newEdgeKey;
       edgesUpdated++;
       
-      // edgePositionsの更新 - 重複キーの問題解決
       const allMatchingEdgeIndices: number[] = [];
       edgePositions.forEach((pos, index) => {
         if (pos.key === oldEdgeKey) {
@@ -282,19 +264,15 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
       });
 
       if (allMatchingEdgeIndices.length > 0) {
-        // 最初の一致要素は更新
         const edgePositionIndex = allMatchingEdgeIndices[0];
-        
-        // 位置情報を更新
         edgePositions[edgePositionIndex] = {
           ...edgePositions[edgePositionIndex],
           key: newEdgeKey
         };
         
-        // 残りの重複要素は削除
         if (allMatchingEdgeIndices.length > 1) {
           for (let i = allMatchingEdgeIndices.length - 1; i > 0; i--) {
-            console.log(`重複したエッジ位置を削除 (インデックス ${allMatchingEdgeIndices[i]}):`);
+            // console.log(`重複したエッジ位置を削除 (インデックス ${allMatchingEdgeIndices[i]}):`);
             edgePositions.splice(allMatchingEdgeIndices[i], 1);
           }
         }
@@ -304,31 +282,26 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
     }
   });
   
-  console.log(`${edgesUpdated}個のエッジを更新しました`);
+  //console.log(`${edgesUpdated}個のエッジを更新しました`);
 
-  // 更新後に残っている古いキーを確認
   const checkRemainingOldKeys = () => {
-    // nodes配列での確認
     const oldNodesRemaining = nodes.value.filter(node => node.key === oldKey);
-    console.log(`nodes内に残っている古いキー '${oldKey}' の数: ${oldNodesRemaining.length}`);
+    // console.log(`nodes内に残っている古いキー '${oldKey}' の数: ${oldNodesRemaining.length}`);
     
-    // nodePositions配列での確認
     const oldPositionsRemaining = nodePositions.filter(pos => pos.key === oldKey);
-    console.log(`nodePositions内に残っている古いキー '${oldKey}' の数: ${oldPositionsRemaining.length}`);
+    //console.log(`nodePositions内に残っている古いキー '${oldKey}' の数: ${oldPositionsRemaining.length}`);
     
-    // 残っているものがあれば詳細を表示
     if (oldPositionsRemaining.length > 0) {
-      console.log("残っている古いキーを持つ位置情報:", oldPositionsRemaining);
+      // console.log("残っている古いキーを持つ位置情報:", oldPositionsRemaining);
     }
   };
   
   // 確認を実行
-  checkRemainingOldKeys();
+  // checkRemainingOldKeys();
   
-  // 更新後のノード情報をログに記録
-  console.log("更新後のノード:", JSON.stringify(node));
+  // console.log("更新後のノード:", JSON.stringify(node));
 
-  return true; // 更新成功
+  return true;
 };
 
 const addEdge = (fromkey: string, fromname: string, fromlayer: string, tokey: string, toname: string, tolayer: string, edgetype: string) => {
