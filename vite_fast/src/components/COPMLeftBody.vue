@@ -110,31 +110,38 @@
         </div>
         <AH2 h2Title="Node List" :content="'nodes'" />
         <ul>
-          <li v-for="(node, index) in sortedNodes" :key="index"  :style="getNodeStyle(node.node.layer)">
-            <div class="nodeWrapper">
-              <input
-                v-if="editingNodeKey === node.key"
-                v-model="editedKey"
-                @blur="saveEdit(node)"
-                @keyup.enter="saveEdit(node)"
-                class="edit-input"
+        <li v-for="(node, index) in sortedNodes" :key="index" :style="getNodeStyle(node.node.layer)">
+          <div class="nodeWrapper">
+            <!-- 編集モード時の入力フィールド -->
+            <input
+              v-if="editingNodeKey === node.key"
+              v-model="editedKey"
+              ref="editInput"
+              @keyup.enter.prevent="saveEdit(node)" 
+              @keyup.esc="cancelEdit"               
+              class="edit-input"
+              v-focus                               
+            />
+            <span v-else class="longKey">
+              {{ node.node.name }}
+            </span>
+            
+            <!-- 編集ボタン (編集モードでない時のみ表示) -->
+            <button 
+              @click="startEditing(node)" 
+              v-if="editingNodeKey !== node.key"
+              style="background: none; border: none; padding: 0; cursor: pointer; height: 25px; margin-right: 0.5rem;"
+            >
+              <font-awesome-icon 
+                :icon="['fas', 'pen-to-square']"
+                style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
               />
-              <span v-else class="longKey">
-                {{ node.node.name }}
-              </span>
-              <button 
-                @click="startEditing(node)" 
-                v-if="editingNodeKey !== node.key"
-                style="background: none; border: none; padding: 0; cursor: pointer; height: 25px; margin-right: 0.5rem;"
-              >
-                <font-awesome-icon 
-                  :icon="['fas', 'pen-to-square']"
-                  style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
-                />
-              </button>
-              <button @click="removeNode(node.key)" class="delete-btn">×</button>
-            </div>
-          </li>
+            </button>
+            
+            <!-- 削除ボタン -->
+            <button @click="removeNode(node.key)" class="delete-btn">×</button>
+          </div>
+        </li>
         </ul>
       </div>
     </div>
@@ -421,20 +428,74 @@ export default defineComponent({
       }
     };
     const startEditing = (node) => {
+      // 既に他のノードの編集中でないことを確認
+      if (editingNodeKey.value !== null && isProcessingSave.value) {
+        console.log("他のノードの編集処理中です");
+        return;
+      }
+      
+      // 編集開始
       editingNodeKey.value = node.key;
       editedKey.value = node.node.name;
+      
+      // DOM更新後に自動的にフォーカスされる (v-focus ディレクティブ経由)
     };
 
-    const saveEdit = (node) => {
-      if (editedKey.value.trim() && editedKey.value !== node.node.name) {
-        store.updateNodeKey(node.key, editedKey.value, node.node.layer);
-        if (flag.value === 3) {
-          store.setFlag(4);
-        } else {
-          store.setFlag(3);
-        }
+    // 処理中フラグを追加
+    const isProcessingSave = ref(false);
+
+    const saveEdit = async (node) => {
+      // 処理中なら早期リターン
+      if (isProcessingSave.value) {
+        console.log("既に処理中のため、重複呼び出しをスキップします");
+        return;
       }
+      
+      try {
+        // 処理開始フラグをセット
+        isProcessingSave.value = true;
+        
+        // 編集内容に変更があり、かつ入力値が空でない場合のみ処理
+        if (editedKey.value && editedKey.value.trim() && editedKey.value !== node.node.name) {
+          console.log("編集開始:", node.key, "新しい名前:", editedKey.value, "レイヤー:", node.node.layer);
+          
+          // 更新処理を実行
+          const updateResult = await store.updateNodeKey(node.key, editedKey.value, node.node.layer);
+          
+          if (updateResult) {
+            console.log("ノード名更新成功");
+            if (flag.value === 3) {
+              store.setFlag(4);
+            } else {
+              store.setFlag(3);
+            }
+          } else {
+            console.error("ノード名更新失敗");
+            // エラーメッセージの表示など
+          }
+        } else {
+          console.log("編集なし、または無効な入力のため更新をスキップ");
+        }
+      } catch (error) {
+        console.error("保存処理中にエラーが発生しました:", error);
+      } finally {
+        // 処理完了後、編集状態をリセット
+        editingNodeKey.value = null;
+        // 処理中フラグをリセット
+        isProcessingSave.value = false;
+      }
+    };
+
+    // フォーカス用のカスタムディレクティブ
+    const vFocus = {
+      mounted: (el) => el.focus()
+    };
+
+    // 編集キャンセルメソッド
+    const cancelEdit = () => {
+      console.log("編集をキャンセルしました");
       editingNodeKey.value = null;
+      editedKey.value = '';
     };
 
     const addEdge = () => {
@@ -569,7 +630,11 @@ export default defineComponent({
       edgeTypesColor,
       getEdgeTypeStyle,
       getNodeStyle,
-      editingEdgeKey
+      editingEdgeKey,
+      vFocus,
+      cancelEdit,
+      removeEdge,
+      isProcessingSave,
     };
   },
   components: {
