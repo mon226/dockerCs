@@ -137,8 +137,14 @@
                 style="color: #373231; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
               />
             </button>
-            
-            <!-- 削除ボタン -->
+            <font-awesome-icon 
+              :icon="['fas', 'arrows-to-circle']" 
+              class="icon" 
+              @mouseover="changeCursor('pointer')"
+              @mouseleave="resetCursor"
+              @click="alertNodeKey(node.key)"
+              style="font-size: 20px; margin-right: 0.5rem;"
+            />
             <button @click="removeNode(node.key)" class="delete-btn">×</button>
           </div>
         </li>
@@ -210,6 +216,14 @@
                 </button>
               </div>
             </div>
+            <font-awesome-icon 
+              :icon="['fas', 'arrows-to-circle']" 
+              class="icon" 
+              @mouseover="changeCursor('pointer')"
+              @mouseleave="resetCursor"
+              @click="alertEdgeKey(edge.key)"
+              style="font-size: 20px; margin-right: 0.5rem; padding-top: 2.5px;"
+            />
             <button @click="removeEdge(edge.key)" class="delete-btn">×</button>
           </li>
         </ul>
@@ -234,6 +248,11 @@ export default defineComponent({
       type: Number,
       required: true
     },
+  },
+  directives: {
+    focus: {
+      mounted: (el) => el.focus()
+    }
   },
   setup(props, { emit }) {
     const projectName = computed(() => store.projectName);
@@ -502,6 +521,21 @@ export default defineComponent({
         store.setFlag(3);
       }
     };
+
+    const alertNodeKey = (key) => {
+      store.setFocusingKey("node", key);
+      setTimeout(() => {
+      store.setFocusingKey();
+      }, 5000);
+    };
+
+    const alertEdgeKey = (key) => {
+      store.setFocusingKey("edge", key);
+      setTimeout(() => {
+      store.setFocusingKey();
+      }, 5000);
+    };
+
     watch(
       () => flag.value, 
       (newFlag) => {
@@ -612,6 +646,8 @@ export default defineComponent({
       cancelEdit,
       removeEdge,
       isProcessingSave,
+      alertNodeKey,
+      alertEdgeKey,
     };
   },
   components: {
@@ -846,6 +882,7 @@ input {
   }
   & .longKey {
     margin-right: 1rem;
+    cursor: default;
   }
   & button {
     margin-left: 2.5px;
@@ -899,6 +936,7 @@ input {
   overflow: auto;
   white-space: nowrap;
   padding-right: 0.5rem;
+  cursor: default;
 }
 ::-webkit-scrollbar {
   width: 8px;
@@ -908,6 +946,7 @@ input {
 .edgeName {
   display: flex;
   align-items: center;
+  cursor: default;
 }
 .edgeType {
   font-size: 0.8rem;

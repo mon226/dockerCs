@@ -21,6 +21,7 @@ const isImportPopup = ref(false);
 const editColor = ref(new Array(layers.value.length).fill(false));
 const version = import.meta.env.VITE_VERSION as string;
 const planeData = ref({ m:9, d:3 });
+const focusingKey = ref({ type: "", key: "" });
 
 watch(flag, () => {
   if (flag.value === 1) {
@@ -590,46 +591,6 @@ const editPlaneData = (m: number, d: number) => {
   planeData.value = { m, d };
 }
 
-const calculatePlaneSize = () => {
-  const maxNodeCount = Math.max(
-    ...Object.values(nodes.value.reduce((acc, node) => {
-      const layer = node.node.layer;
-      if (acc[layer]) {
-        acc[layer]++;
-      } else {
-        acc[layer] = 1;
-      }
-      return acc;
-    }, {} as Record<string, number>))
-  );
-  let m = 3;
-  while ( m * m / 5 < maxNodeCount) {
-    m += 2;
-  }
-  m += 6;
-  editPlaneData(m , planeData.value.d);
-};
-
-const calculateDistance = () => {
-  const maxNodeCount = Math.max(
-    ...Object.values(nodes.value.reduce((acc, node) => {
-      const layer = node.node.layer;
-      if (acc[layer]) {
-        acc[layer]++;
-      } else {
-        acc[layer] = 1;
-      }
-      return acc;
-    }, {} as Record<string, number>)) as number[]
-  );
-  let d = 3;
-  while ( d * d / 2.5 < maxNodeCount) {
-    d += 1;
-  }
-  editPlaneData(planeData.value.m , d);
-  return d;
-};
-
 const selectLayer = () => {
   const selectedNodePositions = nodePositions.filter((node) => visibleLayers.value.includes(node.layer));
   const selectedEdgePositions = edgePositions.filter((edge) => visibleLayers.value.includes(edge.fromlayer) && visibleLayers.value.includes(edge.tolayer));
@@ -684,9 +645,13 @@ const converter = (value: string ) => {
   return value;
 };
 
+const setFocusingKey = ( type?: string, key?: string) => {
+  focusingKey.value = { type: type || "", key: key || "" };
+}
+
 export const useNetworkDataStore = defineStore("networkData", () => {
   return { layers, addLayer, removeLayer, flag, setFlag, nodes, edges, colors, addNode, addEdge, half, 
     availableGrid, setHalf, setAvailableGrid, dataset, setDataset, addAvailableGrid, removeAvailableGrid, changeNodePositions, changeEdgePositions, makeNodePositions, makeEdgePositions, filterNodesAndEdges, removeNode, removeEdge, setOPL, oplEdges, oplNodes, 
     makeNodePositionsFromOPL, makeEdgePositionsFromOPL, oplErrors, setPopup, isSavePopup, setProjectName, projectName, setImportPopup, isImportPopup, handleFileUpload, setProjectNumber, projectNumber, importProjectFromNeo4j, colorList, addColorList, editColor, 
-    setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, calculatePlaneSize, nodePositions, edgePositions, calculateDistance, selectLayer, setVisibleLayers, visibleLayers , setEdgeInfo, converter, deleteEdgeInfo };
+    setEditColor, changeLayerColor, updateNodeKey, version, editPlaneData, planeData, nodePositions, edgePositions, selectLayer, setVisibleLayers, visibleLayers , setEdgeInfo, converter, deleteEdgeInfo, focusingKey, setFocusingKey };
 });

@@ -48,6 +48,12 @@ export default defineComponent({
     let m = planeData.value.m;
     const pointNumber = ref(2);
     const cameraData = ref<string[]>([]);
+    const focusingKey = computed<any>(() => store.focusingKey);
+    
+    // フォーカス中のノードとエッジを追跡するための変数
+    const focusedNodeKey = ref<string | null>(null);
+    const focusedEdgeKey = ref<string | null>(null);
+    const focusTimeoutId = ref<NodeJS.Timeout | null>(null);
 
     const calculatePlaneSize = () => {
       if ( nodes.value.length === 0 ) {
@@ -148,7 +154,6 @@ export default defineComponent({
       });
       return cones;
     };
-
 
     const generateSpheres = (edgesData: any[], color: string, place: string) => {
       const spheres = edgesData.map((edge) => {
@@ -268,14 +273,73 @@ export default defineComponent({
       return arrows;
     };
 
+    const getNodeColor = (nodeKey: string, defaultColor: string) => {
+      if (focusedNodeKey.value === nodeKey) {
+        return 'red'; 
+      }
+      return defaultColor;
+    };
+
+    const getEdgeColor = (edgeKey: string, defaultColor: string) => {
+      if (focusedEdgeKey.value === edgeKey) {
+        return 'red';
+      }
+      return defaultColor;
+    };
+
+    const resetFocusedItems = () => {
+      if (focusTimeoutId.value) {
+        clearTimeout(focusTimeoutId.value);
+        focusTimeoutId.value = null;
+      }
+      focusedNodeKey.value = null;
+      focusedEdgeKey.value = null;
+      updatePlot(); 
+    };
+
+    watch(
+      () => [focusingKey.value.type, focusingKey.value.key],
+      ([newType, newKey], [oldType, oldKey]) => {
+        if (newType === 'node' && newKey) {
+          if (focusTimeoutId.value) {
+            clearTimeout(focusTimeoutId.value);
+          }
+          
+          focusedNodeKey.value = newKey;
+          focusedEdgeKey.value = null;
+          
+          updatePlot();
+          
+          focusTimeoutId.value = setTimeout(() => {
+            resetFocusedItems();
+          }, 5000);
+        } else if (newType === 'edge' && newKey) {
+          if (focusTimeoutId.value) {
+            clearTimeout(focusTimeoutId.value);
+          }
+          
+          focusedEdgeKey.value = newKey;
+          focusedNodeKey.value = null;
+          
+          updatePlot();
+          
+          focusTimeoutId.value = setTimeout(() => {
+            resetFocusedItems();
+          }, 5000);
+        } else if (!newKey) {
+          resetFocusedItems();
+        }
+      },
+      { flush: 'post' }
+    );
+
     const renderPlot = (data) => {
       if (plotlyChart.value) {
         const plotlyElement = plotlyChart.value;
         if ((plotlyChart.value as any).layout) {
           cameraData.value = (plotlyChart.value as any).layout.scene.camera;
         }
-        plotlyElement.addEventListener('wheel', (event) => {  
-        }, { passive: true });
+
         Plotly.newPlot(plotlyChart.value, data, {
             scene: { xaxis: { visible: false }, yaxis: { visible: false }, zaxis: { visible: false }, 
             ...(cameraData.value ? { camera: cameraData.value } : {})},
@@ -393,9 +457,19 @@ export default defineComponent({
         const edgePositions = store.makeEdgePositions();
         const dataset1 = nodePositions.map((node) => {
           const layerIndex = layers.value.indexOf(node.layer);
-          const color = colors.value[layerIndex];
+          const defaultColor = colors.value[layerIndex];
+          const nodeColor = getNodeColor(node.key, defaultColor);
           store.removeAvailableGrid(node.position.x, node.position.y, node.position.z);
-          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 4, color: color }, name: node.name, text: node.name };
+          return { 
+            x: [node.position.x], 
+            y: [node.position.y], 
+            z: [d * (layers.value.length - node.position.z - 1)], 
+            type: "scatter3d", 
+            mode: 'markers+text', 
+            marker: { size: 4, color: nodeColor }, 
+            name: node.name, 
+            text: node.name 
+          };
         });
         const dataset2 = edgePositions.map((edge) => {
           let lineColor = "black";
@@ -414,13 +488,17 @@ export default defineComponent({
           } else if (edge.info?.weight === "-3") {
             lineColor = "#9f1e35";
           }
+          
+          // エッジのフォーカス機能を適用
+          const finalLineColor = getEdgeColor(edge.key, lineColor);
+          
           return { 
             x: [edge.position.from.x, edge.position.to.x], 
             y: [edge.position.from.y, edge.position.to.y], 
             z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], 
             type: "scatter3d", 
             mode: "lines", 
-            line: { color: lineColor, width: 3 }, 
+            line: { color: finalLineColor, width: 3 }, 
             name: `${edge.key}`, 
             hoverinfo: "none", 
             text: `${edge.type}`
@@ -448,9 +526,19 @@ export default defineComponent({
         const visiblePlanes = planes.filter((plane) => visibleLayers.includes(plane.name.split(" ")[1]));
         const dataset1 = selectedNodePositions.map((node) => {
           const layerIndex = layers.value.indexOf(node.layer);
-          const color = colors.value[layerIndex];
+          const defaultColor = colors.value[layerIndex];
+          const nodeColor = getNodeColor(node.key, defaultColor);
           store.removeAvailableGrid(node.position.x, node.position.y, node.position.z);
-          return { x: [node.position.x], y: [node.position.y], z: [d * (layers.value.length - node.position.z - 1)], type: "scatter3d", mode: 'markers+text', marker: { size: 4, color: color }, name: node.name, text: node.name };
+          return { 
+            x: [node.position.x], 
+            y: [node.position.y], 
+            z: [d * (layers.value.length - node.position.z - 1)], 
+            type: "scatter3d", 
+            mode: 'markers+text', 
+            marker: { size: 4, color: nodeColor }, 
+            name: node.name, 
+            text: node.name 
+          };
         });
         const dataset2 = selectedEdgePositions.map((edge) => {
           let lineColor = "black";
@@ -469,13 +557,17 @@ export default defineComponent({
           } else if (edge.info?.weight === "-3") {
             lineColor = "#9f1e35";
           }
+          
+          // エッジのフォーカス機能を適用
+          const finalLineColor = getEdgeColor(edge.key, lineColor);
+          
           return { 
             x: [edge.position.from.x, edge.position.to.x], 
             y: [edge.position.from.y, edge.position.to.y], 
             z: [d * (layers.value.length - edge.position.from.z - 1), d * (layers.value.length - edge.position.to.z - 1)], 
             type: "scatter3d", 
             mode: "lines", 
-            line: { color: lineColor, width: 3 }, 
+            line: { color: finalLineColor, width: 3 }, 
             name: `${edge.key}`, 
             hoverinfo: "none", 
             text: `${edge.type}`
@@ -491,14 +583,20 @@ export default defineComponent({
         renderPlot([...dataset1, ...visiblePlanes, ...dataset2, ...options]);
       }
     };
+    
     watch(flag, () => {
       updatePlot();
     });
+    
     onMounted(() => {
       updatePlot();
     });
 
     onUnmounted(() => {
+      if (focusTimeoutId.value) {
+        clearTimeout(focusTimeoutId.value);
+      }
+      
       if (plotlyChart.value) {
         Plotly.purge(plotlyChart.value);
       }
@@ -522,7 +620,7 @@ export default defineComponent({
           case 'consumes':
             return generateCones([edge], '#2d9058', 'from');
           case 'yields':
-            return generateCones([edge], 'b13b22', 'to');
+            return generateCones([edge], '#b13b22', 'to');
           case 'affects':
             return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
           default:
