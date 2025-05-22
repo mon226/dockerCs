@@ -4,7 +4,7 @@
     <font-awesome-icon
       :icon="['fas', 'download']"
       @click="download(content)"
-      style="color: #0d0d0d;"
+      style="color: #373231;"
     />
   </div>
 </template>

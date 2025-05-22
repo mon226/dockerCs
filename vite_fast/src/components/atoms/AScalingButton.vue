@@ -139,7 +139,7 @@
     border-radius: 2px;
   }
   .select__option:hover .select__label {
-    background-color: c.$maroon !important;
+    background-color: c.$sub_8 !important;
   }
 }
 

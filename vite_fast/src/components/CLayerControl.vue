@@ -160,9 +160,9 @@ export default {
   column-gap: 20px;
 }
 button {
-  background-color: c.$blue-light;
+  background-color: c.$sub_6_light;
   &:hover {
-    background-color: c.$maroon
+    background-color: c.$sub_8
   }
 }
 button.active {
@@ -172,7 +172,7 @@ button.active {
   cursor: pointer;
   border: none;
   outline: none;
-  background-color: c.$blue-light;
+  background-color: c.$sub_6_light;
   color: c.$white;
   border-radius: 4px;
 }

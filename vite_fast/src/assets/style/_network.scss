@@ -4,7 +4,7 @@
   width: 100%;
   height: 90vh;
   background-color: c.$gray;
-  border: 2px solid c.$yellow;
+  border: 2px solid c.$sub_3;
   position: relative;
 }
 .canvas-container {
@@ -37,7 +37,7 @@
 }
 .basediv.edit-mode {
   background-color: c.$gray;
-  border: 10px solid c.$blue;
+  border: 10px solid c.$sub_6;
 }
 .object-image {
   position: absolute;
@@ -70,9 +70,9 @@
 textarea {
   &.topdiv-object {
     resize: vertical;
-    border: 3px solid c.$green-light;
+    border: 3px solid c.$sub_4_light;
     &:focus {
-      border-color: c.$green;  
+      border-color: c.$sub_4;  
       outline: none;  
       cursor: text;
     }

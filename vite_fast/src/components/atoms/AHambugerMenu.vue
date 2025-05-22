@@ -102,7 +102,7 @@ export default defineComponent({
 
 .menu {
   background-color: c.$white;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
   z-index: 30;
   padding: 2rem 1rem;
   position: absolute;
@@ -130,14 +130,14 @@ export default defineComponent({
   padding: 0 0rem;
 
   &:hover {
-    background-color: c.$maroon;
+    background-color: c.$sub_8;
     color: c.$white;
   }
 }
 
 li {
   &:hover {
-    background-color: c.$maroon;
+    background-color: c.$sub_8;
     a {
       color: c.$white;
     }

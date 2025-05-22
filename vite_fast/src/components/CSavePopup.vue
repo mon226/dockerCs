@@ -58,7 +58,6 @@ export default defineComponent({
         edgePositions: store.edgePositions,
       };
       console.log("Save dataset:", saveDataset);
-      /*
       try {
         const response = await fetch("http://localhost:8080/save", {
           method: "POST",
@@ -72,7 +71,6 @@ export default defineComponent({
       } catch (error) {
         console.error("Error:", error);
       }
-      */
       if (isJsonDownload.value) {
         const blob = new Blob([JSON.stringify(saveDataset)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -107,7 +105,7 @@ export default defineComponent({
   background-color: c.$white;
   color: c.$black;
   z-index: 10000;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
   padding: 10px;
 
   & label {
@@ -117,7 +115,7 @@ export default defineComponent({
   }
 
   & button {
-    background-color: c.$blue;
+    background-color: c.$sub_6;
     color: c.$white;
     border: none;
     padding: 10px 20px;

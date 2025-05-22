@@ -69,6 +69,7 @@ networks:
 ## cd vite_fast
 ## npm install
 ## docker-compose up --build
+## http://localhost:5173/opm
 ## http://localhost:8080/docs#/
 
 ##必要に応じて.gitフォルダを削除

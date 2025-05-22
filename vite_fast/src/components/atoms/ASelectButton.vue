@@ -61,7 +61,7 @@ export default defineComponent({
 
 #item-select:focus {
   outline: none; /* デフォルトのフォーカススタイルを無効化 */
-  border: 2px solid c.$maroon; /* フォーカス時に枠を赤く */
+  border: 2px solid c.$sub_8; /* フォーカス時に枠を赤く */
 }
 
 #h2-container {

@@ -6,6 +6,7 @@
         <td>{{ edge.edge.fromname }}</td>
         <td>
           <select v-model="selectedDirection">
+            <option value="----">----</option>
             <option>→</option>
             <option>↔︎</option>
             <option>←</option>
@@ -17,9 +18,12 @@
         <td>重み</td>
         <td>
           <select v-model="selectedWeight">
+            <option value="----">----</option>
             <option>-3</option>
             <option>-1</option>
+            <option>-1/3</option>
             <option>0</option>
+            <option>+1/3</option>
             <option>+1</option>
             <option>+3</option>
           </select>
@@ -48,13 +52,24 @@
     },
     setup(props, { emit }) {
       const store = useNetworkDataStore();
-      const selectedDirection = props.edge.info?.direction ? ref(store.converter(props.edge.info.direction)) : ref("→");
-      const selectedWeight = props.edge.info?.weight ? ref(props.edge.info.weight) : ref(0);
+      
+      const selectedDirection = props.edge.info?.direction 
+        ? ref(store.converter(props.edge.info.direction)) 
+        : ref("----");
+      
+      const selectedWeight = props.edge.info?.weight 
+        ? ref(props.edge.info.weight) 
+        : ref("----");
 
       const confirmWeight = () => {
-        store.setEdgeInfo(props.edge.key, store.converter(selectedDirection.value), selectedWeight.value,);
+        if (selectedDirection.value === "----" || selectedWeight.value === "----") {
+          return;
+        }
+        
+        store.setEdgeInfo(props.edge.key, store.converter(selectedDirection.value), selectedWeight.value);
         emit('update:editingEdgeKey', '');
       };
+      
       const deleteInfo = () => {
         store.deleteEdgeInfo(props.edge.key);
         emit('update:editingEdgeKey', '');
@@ -69,6 +84,7 @@
     }
   })
 </script>
+
 <style lang="scss">
 @use "@/assets/style/color" as c;
 table {
@@ -96,7 +112,7 @@ table {
 
   & button {
     width: 50px;
-    background-color: c.$blue;
+    background-color: c.$sub_6;
   }
 }
 </style>

@@ -69,7 +69,7 @@ input[type="number"] {
 
 input[type="number"]:focus {
   outline: none;
-  border: 2px solid c.$maroon; /* フォーカス時に枠を赤く */
+  border: 2px solid c.$sub_8; /* フォーカス時に枠を赤く */
 }
 
 input[type=number]::-webkit-inner-spin-button {

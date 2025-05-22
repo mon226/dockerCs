@@ -146,7 +146,7 @@ export default defineComponent({
 
 .info {
   background-color: c.$white;
-  border: 5px solid c.$green;
+  border: 5px solid c.$sub_4;
   z-index: 30;
   padding: 2rem 1rem;
   position: absolute;
@@ -170,12 +170,12 @@ export default defineComponent({
     color: c.$gray;
     border-bottom: 3px solid c.$gray; 
     &:hover {
-      color: c.$green-light;
-      border-bottom: 3px solid c.$green-light;
+      color: c.$sub_4_light;
+      border-bottom: 3px solid c.$sub_4_light;
     }
     &.router-link-exact-active {
-      color: c.$green;
-      border-bottom: 3px solid c.$green;
+      color: c.$sub_4;
+      border-bottom: 3px solid c.$sub_4;
       &:hover {
         background-color: transparent;
       }

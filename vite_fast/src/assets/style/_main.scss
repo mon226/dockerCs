@@ -22,12 +22,12 @@ body {
 
 a, .green {
   text-decoration: none;
-  color: c.$green; // ネームスペースを使って変数を参照
+  color: c.$sub_4; 
   padding: 3px;
 }
 
 @media (hover: hover) {
   a:hover {
-    background-color: c.$green-light; // ネームスペースを使って変数を参照
+    background-color: c.$sub_4_light;
   }
 }

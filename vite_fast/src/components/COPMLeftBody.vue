@@ -134,7 +134,7 @@
             >
               <font-awesome-icon 
                 :icon="['fas', 'pen-to-square']"
-                style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+                style="color: #373231; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
               />
             </button>
             
@@ -190,13 +190,13 @@
               >
                 <font-awesome-icon 
                   :icon="['fas', 'up-right-from-square']"
-                  style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+                  style="color: #373231; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
                 />
               </button>
               <div 
                 class="edgeInfoWrapper"
                 v-if="editingEdgeKey === edge.key" 
-                :style="{ border: `4px solid ${edgeTypesColor[edgeTypes.indexOf(edge.type)]}`, padding: '0.5rem', margin: '0 0.1rem', position: 'absolute', top: '0', left: '50px', backgroundColor: '#f3f3f3', color: '#0d0d0d', width: '300px', zIndex: '100000', height: '100px'}"
+                :style="{ border: `4px solid ${edgeTypesColor[edgeTypes.indexOf(edge.type)]}`, padding: '0.5rem', margin: '0 0.1rem', position: 'absolute', top: '0', left: '50px', backgroundColor: '#f3f3f3', color: '#373231', width: '300px', zIndex: '100000', height: '100px'}"
                 >
                 <AEdgeInformation :edge="edge" v-model:editingEdgeKey="editingEdgeKey" />
                 <button 
@@ -205,7 +205,7 @@
                 >
                   <font-awesome-icon 
                     :icon="['fas', 'circle-xmark']"
-                    style="color: #0d0d0d; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
+                    style="color: #373231; font-size: 20px; border: 1px solid transparent; padding: 1.5px;"
                   />
                 </button>
               </div>
@@ -257,7 +257,7 @@ export default defineComponent({
     const edgeType = ref('');
     const edgeTo = ref('');
     const edgeTypes = ["consists of", "follows",  "exhibits",  "is",  "handles",  "requires",  "consumes",  "yields",  "affects"];
-    const edgeTypesColor = ["#262730", "blue", "#26273033", "#f3f3f3", "#f4da24", "#e0815e", "#2e9058", "#b61f22", "#731a3d"];
+    const edgeTypesColor = ["#262730", "#004563", "#29534d", "#f3f3f3", "#f4da24", "#f5b18099", "#2d9058", "#b13b22", "#635d73"];
     const edges = computed(() => store.edges);
     const canMakeNewEdge = computed(() => nodes.value.length > 1);
     const canImportOPL = ref(false);
@@ -371,13 +371,13 @@ export default defineComponent({
       if (index === -1) return {};
 
       const backgroundColor = edgeTypesColor[index];
-      let textColor = "#0d0d0d";
+      let textColor = "#373231";
       let border = "";
 
-      if (backgroundColor === "#262730" || backgroundColor === "#26273033" || backgroundColor === "#731a3d"|| backgroundColor === "blue") {
+      if (backgroundColor === "#262730" || backgroundColor === "#26273033" || backgroundColor === "#635d73"|| backgroundColor === "#004563" || backgroundColor === "#29534d") {
         textColor = "#f3f3f3";
       } else if (backgroundColor === "#f3f3f3") {
-        border = "1px solid #0d0d0d";
+        border = "1px solid #373231";
       }
 
       return {
@@ -650,7 +650,7 @@ export default defineComponent({
   width: 100%;
   min-height: 85vh;
   background-color: #f3f3f3CC;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
 }
 .wrapper {
   display: flex;
@@ -675,14 +675,15 @@ export default defineComponent({
     font-size: 1.2rem;
     padding: 0 0rem;
     &:hover {
-      background-color: c.$maroon;
+      background-color: c.$sub_8;
       color: c.$white;
     }
   }
 }
 li {
   &:hover {
-    background-color: c.$maroon;
+    background-color: c.$sub_8;
+    color: c.$white;
     a {
       color: c.$white;
     }
@@ -693,8 +694,8 @@ li {
 }
 
 .projectInfo {
-  border-top: 5px solid c.$blue;
-  border-bottom: 5px solid c.$blue;
+  border-top: 5px solid c.$sub_6;
+  border-bottom: 5px solid c.$sub_6;
   padding: 1rem;
   color: c.$black;
   & .h1-wrapper {
@@ -705,7 +706,7 @@ li {
 .layerControl {
   margin-top: 1rem;
   padding: 0 1rem 1rem 1rem;
-  border-bottom: 5px solid c.$blue;
+  border-bottom: 5px solid c.$sub_6;
 
   .expanded {
     color: c.$black;
@@ -735,7 +736,7 @@ h2 {
   color: c.$black;
 }
 .expanded li {
-  background-color: c.$blue;
+  background-color: c.$sub_6;
   padding: 0.5rem;
   color: c.$white;
   width: 45%;
@@ -750,7 +751,7 @@ h2 {
   position: relative;
 }
 .delete-btn {
-  background: c.$maroon;
+  background: c.$sub_8;
   color: c.$white;
   border: none;
   border-radius: 50%;
@@ -761,7 +762,7 @@ h2 {
   cursor: pointer;
 
   &:hover {
-    background: c.$red;
+    background: c.$text_3;
   }
 }
 .expanded ul {
@@ -772,21 +773,21 @@ h2 {
 }
 .square-btn {
   padding: 0.25rem 0.5rem;
-  background-color: c.$blue;
+  background-color: c.$sub_6;
   color: c.$white;
   border-radius: 5px;
   margin-left: 10px
 }
 input {
   height: 30px;
-  border: 2px solid c.$maroon;
+  border: 2px solid c.$sub_8;
   padding: 0 0.25rem;
 }
 
 .nodeControl {
   margin-top: 1rem;
   padding: 0 1rem 1rem 1rem;
-  border-bottom: 5px solid c.$blue;
+  border-bottom: 5px solid c.$sub_6;
 }
 #layerControlWrapper {
   display: flex;
@@ -795,7 +796,7 @@ input {
 }
 .nodeControl select {
   margin-left: 0.5rem;
-  border: 2px solid c.$maroon;
+  border: 2px solid c.$sub_8;
   padding: 0 0.25rem;
 }
 .nodeControl ul {
@@ -821,7 +822,7 @@ input {
 .edgeControl {
   margin-top: 1rem;
   padding: 0 1rem 1rem 1rem;
-  border-bottom: 5px solid c.$blue;
+  border-bottom: 5px solid c.$sub_6;
 }
 #edgeControlWrapper {
   display: flex;
@@ -829,7 +830,7 @@ input {
   align-items: center;
 }
 .edgeControl select {
-  border: 2px solid c.$maroon;
+  border: 2px solid c.$sub_8;
   padding: 0 0.25rem;
 }
 .edgeControl ul {
@@ -859,7 +860,7 @@ input {
 #importOPL {
   margin-top: 1rem;
   padding: 0 1rem 1rem 1rem;
-  border-bottom: 5px solid c.$blue;
+  border-bottom: 5px solid c.$sub_6;
   & p {
     color: c.$black;
     text-decoration: none;
@@ -875,7 +876,7 @@ input {
   padding: 0 1rem 1rem 1rem;
   & textarea {
     width: 100%;
-    border: 2px solid c.$maroon;
+    border: 2px solid c.$sub_8;
     padding: 0.5rem;
   }
 }
@@ -888,7 +889,7 @@ input {
   color: c.$black;
   & select {
     margin-left: 0.5rem;
-    border: 2px solid c.$maroon;
+    border: 2px solid c.$sub_8;
     padding: 0 0.25rem;
 }
 }
@@ -919,7 +920,8 @@ input {
   align-items: center;
   width: 100%;
   &:hover {
-    background-color: c.$maroon;
+    background-color: c.$sub_8;
+    color: c.$text_2;
   }
 }
 </style>

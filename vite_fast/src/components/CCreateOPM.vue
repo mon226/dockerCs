@@ -184,7 +184,7 @@ export default defineComponent({
         padding: 5px 0;
 
         .delete-btn {
-          background: c.$red;
+          background: c.$text_3;
           color: c.$white;
           border: none;
           border-radius: 50%;
@@ -196,7 +196,7 @@ export default defineComponent({
           cursor: pointer;
 
           &:hover {
-            background: c.$maroon;
+            background: c.$sub_8;
           }
         }
       }
@@ -238,20 +238,20 @@ export default defineComponent({
   }
 
   button {
-    background-color: c.$blue-light;
+    background-color: c.$sub_6_light;
     color: c.$white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 
     &:hover {
-      background-color: c.$maroon;
+      background-color: c.$sub_8;
     }
   }
 
   input {
     &:focus {
-      border: 1px solid c.$maroon;
+      border: 1px solid c.$sub_8;
     }
   }
 }

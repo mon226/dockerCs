@@ -29,7 +29,7 @@ export default defineComponent({
     <Header />
     <img src="@/assets/image/stripe.png" alt="stripe" class="background-img">
     <svg class="background-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <polygon points="50,0 100,0 100,100 70,100" fill="#0d0d0d" stroke="#0d0d0d" stroke-width="0"/>
+      <polygon points="50,0 100,0 100,100 70,100" fill="#373231" stroke="#373231" stroke-width="0"/>
     </svg>
     <div class="cbody">
       <slot />
@@ -75,10 +75,10 @@ export default defineComponent({
 
 ::-webkit-scrollbar-thumb {
   border-radius: 11px;
-  background-color: c.$yellow-light;
+  background-color: c.$sub_3_light;
 
   &:hover {
-    background-color: c.$yellow;
+    background-color: c.$sub_3;
   }
 }
 </style>

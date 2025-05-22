@@ -86,7 +86,7 @@ export default defineComponent({
   width: 100%;
   height: 10vh;
   background-color: c.$white;
-  border: 2px solid c.$yellow;
+  border: 2px solid c.$sub_3;
   display: flex;
   align-items: center;
   color: c.$black;

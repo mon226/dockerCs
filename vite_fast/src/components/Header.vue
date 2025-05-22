@@ -27,7 +27,7 @@ nav {
 
   a {
     &.router-link-exact-active {
-      color: c.$green;
+      color: c.$sub_4;
 
       &:hover {
         background-color: transparent;

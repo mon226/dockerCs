@@ -101,7 +101,7 @@ export default defineComponent({
   height: 100%;
   padding: 1rem;
   background-color: c.$white;
-  border-left: 5px solid c.$blue;
+  border-left: 5px solid c.$sub_6;
   transition: opacity 0.3s ease-in-out;
   ul {
     list-style: none;
@@ -115,7 +115,7 @@ export default defineComponent({
 .pullMenu {
   width: 30px;
   height: 100px;
-  background-color: c.$blue;
+  background-color: c.$sub_6;
   border-radius: 5px 0 0 5px;
   display: flex;
   align-items: center;

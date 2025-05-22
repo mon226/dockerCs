@@ -56,10 +56,10 @@ button.btn {
   padding: 0.2rem;
   border: 0;
   border-radius: 0.5rem;
-  background: linear-gradient(to right, c.$yellow, c.$green);
+  background: linear-gradient(to right, c.$sub_3, c.$sub_4);
 
   &:hover {
-    background: linear-gradient(to left, c.$yellow, c.$green);
+    background: linear-gradient(to left, c.$sub_3, c.$sub_4);
   }
 }
 

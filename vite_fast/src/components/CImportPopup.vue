@@ -103,10 +103,10 @@ export default defineComponent({
   background-color: c.$white;
   color: c.$black;
   z-index: 10000;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
   padding: 10px;
   & button {
-    background-color: c.$blue;
+    background-color: c.$sub_6;
     color: c.$white;
     border: none;
     padding: 10px 20px;
@@ -127,6 +127,10 @@ input {
     padding: 0;
     color: c.$black;
     margin: 20px 0;
+    :hover {
+      background-color: c.$sub_8;
+      color: c.$white;
+    }
   }
   li {
     margin: 5px 0;
@@ -134,6 +138,7 @@ input {
     input {
       margin-right: 5px;
     }
+
   }
 }
 .list {

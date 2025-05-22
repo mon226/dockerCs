@@ -201,13 +201,13 @@ export default defineComponent({
 }
 .equation:focus {
   outline: none;
-  border: 2px solid c.$maroon;
+  border: 2px solid c.$sub_8;
 }
 .arrow-button {
   padding: 6px 10px;
   font-size: 14px;
   color: c.$white;
-  background-color: c.$blue;
+  background-color: c.$sub_6;
   border: none;
   border-radius: 5px;
   cursor: pointer;

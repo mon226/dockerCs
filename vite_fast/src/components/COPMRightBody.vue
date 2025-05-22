@@ -216,14 +216,20 @@ export default defineComponent({
 
           const faces = [ [0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4], [0, 1, 2], [0, 2, 3]];
           let color = "black";
-          if (edge.info?.weight === "+1") {
-            color = "lightblue";
-          } else if (edge.info?.weight === "+3") {
-            color = "blue";
+          if (edge.info?.weight === "+3") {
+            color = "#004563";
+          } else if (edge.info?.weight === "+1") {
+            color = "#588da2";
+          } else if (edge.info?.weight === "+1/3") {
+            color = "#c3dde2";
+          } else if (edge.info?.weight === "0") {
+            color = "silver";
+          } else if (edge.info?.weight === "-1/3") {
+            color = "#e9c1c9";
           } else if (edge.info?.weight === "-1") {
-            color = "pink";
+            color = "#c94c62";
           } else if (edge.info?.weight === "-3") {
-            color = "red";
+            color = "#9f1e35";
           }
 
           arrows.push({
@@ -393,14 +399,20 @@ export default defineComponent({
         });
         const dataset2 = edgePositions.map((edge) => {
           let lineColor = "black";
-          if (edge.info?.weight === "+1") {
-            lineColor = "lightblue";
-          } else if (edge.info?.weight === "+3") {
-            lineColor = "blue";
+          if (edge.info?.weight === "+3") {
+            lineColor = "#004563";
+          } else if (edge.info?.weight === "+1") {
+            lineColor = "#588da2";
+          } else if (edge.info?.weight === "+1/3") {
+            lineColor = "#c3dde2";
+          } else if (edge.info?.weight === "0") {
+            lineColor = "silver";
+          } else if (edge.info?.weight === "-1/3") {
+            lineColor = "#e9c1c9";
           } else if (edge.info?.weight === "-1") {
-            lineColor = "pink";
+            lineColor = "#c94c62";
           } else if (edge.info?.weight === "-3") {
-            lineColor = "red";
+            lineColor = "#9f1e35";
           }
           return { 
             x: [edge.position.from.x, edge.position.to.x], 
@@ -442,14 +454,20 @@ export default defineComponent({
         });
         const dataset2 = selectedEdgePositions.map((edge) => {
           let lineColor = "black";
-          if (edge.info?.weight === "+1") {
-            lineColor = "lightblue";
-          } else if (edge.info?.weight === "+3") {
-            lineColor = "blue";
+          if (edge.info?.weight === "+3") {
+            lineColor = "#004563";
+          } else if (edge.info?.weight === "+1") {
+            lineColor = "#588da2";
+          } else if (edge.info?.weight === "+1/3") {
+            lineColor = "#c3dde2";
+          } else if (edge.info?.weight === "0") {
+            lineColor = "silver";
+          } else if (edge.info?.weight === "-1/3") {
+            lineColor = "#e9c1c9";
           } else if (edge.info?.weight === "-1") {
-            lineColor = "pink";
+            lineColor = "#c94c62";
           } else if (edge.info?.weight === "-3") {
-            lineColor = "red";
+            lineColor = "#9f1e35";
           }
           return { 
             x: [edge.position.from.x, edge.position.to.x], 
@@ -490,7 +508,7 @@ export default defineComponent({
       return edges.flatMap((edge) => {
         switch (edge.type) {
           case 'follows':
-            return generateCones([edge], 'blue', 'from');
+            return generateCones([edge], '#004563', 'from');
           case 'consists of':
             return generateCones([edge], 'black', 'frommiddle');
           case 'exhibits':
@@ -502,13 +520,13 @@ export default defineComponent({
           case 'requires':
             return generateSpheres([edge], 'white', 'from');
           case 'consumes':
-            return generateCones([edge], 'green', 'from');
+            return generateCones([edge], '#2d9058', 'from');
           case 'yields':
-            return generateCones([edge], 'red', 'to');
+            return generateCones([edge], 'b13b22', 'to');
           case 'affects':
             return [...generateCones([edge], 'white', 'from'), ...generateCones([edge], 'white', 'to')];
           default:
-            return generateSpheres([edge], 'red', 'to');
+            return generateSpheres([edge], '#ab817e', 'to');
         }
       });
     };
@@ -538,14 +556,20 @@ export default defineComponent({
               });
               const dataset4 = edges.map((edge) => {
                 let lineColor = "black";
-                if (edge.info?.weight === "+1") {
-                  lineColor = "lightblue";
-                } else if (edge.info?.weight === "+3") {
-                  lineColor = "blue";
+                if (edge.info?.weight === "+3") {
+                  lineColor = "#004563";
+                } else if (edge.info?.weight === "+1") {
+                  lineColor = "#588da2";
+                } else if (edge.info?.weight === "+1/3") {
+                  lineColor = "#c3dde2";
+                } else if (edge.info?.weight === "0") {
+                  lineColor = "silver";
+                } else if (edge.info?.weight === "-1/3") {
+                  lineColor = "#e9c1c9";
                 } else if (edge.info?.weight === "-1") {
-                  lineColor = "pink";
+                  lineColor = "#c94c62";
                 } else if (edge.info?.weight === "-3") {
-                  lineColor = "red";
+                  lineColor = "#9f1e35";
                 }
                 return { 
                   x: [edge.position.from.x, edge.position.to.x], 
@@ -710,7 +734,7 @@ export default defineComponent({
 .plotyWrapper {
   width: 100%;
   height: 100vh;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
   background-color: c.$white;
   position: relative;
 }
@@ -719,7 +743,7 @@ export default defineComponent({
   height: 100%;
 }
 canvas {
-  border: 1px solid c.$yellow;
+  border: 1px solid c.$sub_3;
 }
 #crossKey {
   display: grid;
@@ -728,7 +752,7 @@ canvas {
   width: 100px;
   z-index: 100;
   position: absolute;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
   background-color: c.$gray-light;
 }
 
@@ -738,7 +762,7 @@ canvas {
   position: absolute;
   right: 0;
   height: 100px;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
   background-color: c.$gray-light;
   display: flex;
   flex-flow: column;
@@ -755,7 +779,7 @@ canvas {
     height: 50%;
     width: 50%;
     &:hover {
-      background-color: c.$maroon;
+      background-color: c.$sub_8;
     }
   }
   & input {
@@ -766,7 +790,7 @@ canvas {
     text-align: center;
     margin: 10px 0 0 0;
     &:focus {
-      border: 1px solid c.$maroon;
+      border: 1px solid c.$sub_8;
     }
   }
 }
@@ -776,7 +800,7 @@ canvas {
   position: absolute;
   right: 0;
   height: 100px;
-  border: 5px solid c.$blue;
+  border: 5px solid c.$sub_6;
   background-color: c.$gray-light;
   display: flex;
   justify-content: center;
@@ -792,7 +816,7 @@ canvas {
     height: 75%;
     width: 75%;
     &:hover {
-      background-color: c.$maroon;
+      background-color: c.$sub_8;
     }
   }
 }
@@ -804,7 +828,7 @@ canvas {
 }
 
 .button {
-  background-color: c.$blue;
+  background-color: c.$sub_6;
   color: c.$white;
   border: none;
   cursor: pointer;
@@ -813,7 +837,7 @@ canvas {
   height: 100%;
   width: 100%;
   &:hover {
-    background-color: c.$yellow-light;
+    background-color: c.$sub_3_light;
   }
 }
 .grid-center {
@@ -832,7 +856,7 @@ canvas {
   height: 100%;
   width: 100%;
   &:hover {
-    background-color: c.$maroon;
+    background-color: c.$sub_8;
   }
 }
 </style>

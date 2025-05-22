@@ -43,13 +43,13 @@ h1 {
 }
 
 .h1-uline {
-  border-bottom: 2px solid c.$yellow;
+  border-bottom: 2px solid c.$sub_3;
   display: inline-block;
 }
 
 .h1-img {
   padding-bottom: 8px;
-  border-bottom: 2px solid c.$yellow;
+  border-bottom: 2px solid c.$sub_3;
   width: 40px;
   height: 50px;
   margin-top: 3px;
@@ -61,6 +61,6 @@ h1 {
 }
 
 .h1-circle {
-  fill: c.$yellow;
+  fill: c.$sub_3;
 }
 </style>

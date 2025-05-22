@@ -173,14 +173,30 @@ const addNode = (name: string, layer: string) => {
   }
 };
 const removeNode = (key: string) => {
-  edgePositions.forEach(edge => {
-    if ((edge.fromname === nodes.value.find(node => node.key === key)?.node.name && edge.fromlayer === nodes.value.find(node => node.key === key)?.node.layer) || (edge.toname === nodes.value.find(node => node.key === key)?.node.name && edge.tolayer === nodes.value.find(node => node.key === key)?.node.layer)) {
-      edgePositions.splice(edgePositions.findIndex(edgePosition => edgePosition.key === edge.key), 1);
+  const targetNode = nodes.value.find(node => node.key === key)?.node;
+  if (!targetNode) return;
+  
+  const edgesToRemoveIndices = edgePositions.reduce((indices, edge, index) => {
+    const isConnected = 
+      (edge.fromname === targetNode.name && edge.fromlayer === targetNode.layer) || 
+      (edge.toname === targetNode.name && edge.tolayer === targetNode.layer);
+    
+    if (isConnected) {
+      indices.push(index);
     }
+    return indices;
+  }, [] as number[]);
+  
+  edgesToRemoveIndices.sort((a, b) => b - a).forEach(index => {
+    edgePositions.splice(index, 1);
   });
   edges.value = edges.value.filter(edge => edge.edge.fromkey !== key && edge.edge.tokey !== key);
-  nodes.value = [...nodes.value.filter(node => node.key !== key)];
-  nodePositions.splice(nodePositions.findIndex(node => node.key === key), 1);
+  
+  nodes.value = nodes.value.filter(node => node.key !== key);
+  const nodePositionIndex = nodePositions.findIndex(node => node.key === key);
+  if (nodePositionIndex !== -1) {
+    nodePositions.splice(nodePositionIndex, 1);
+  }
 }
 
 const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
@@ -209,9 +225,6 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
       allMatchingIndices.push(index);
     }
   });
-
-  // console.log(`nodePositions内で '${oldKey}' と一致する要素数: ${allMatchingIndices.length}`);
-  // console.log("一致するインデックス:", allMatchingIndices);
 
   if (allMatchingIndices.length > 0) {
     const nodePositionIndex = allMatchingIndices[0];
@@ -253,6 +266,10 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
 
     if (edgeUpdated) {
       const newEdgeKey = `${edge.edge.fromkey} --(${edge.type})-> ${edge.edge.tokey}`;
+      const newEdgeFromname = edge.edge.fromname;
+      const newEdgeFromlayer = edge.edge.fromlayer;
+      const newEdgeToname = edge.edge.toname;
+      const newEdgeTolayer = edge.edge.tolayer;
       edge.key = newEdgeKey;
       edgesUpdated++;
       
@@ -267,7 +284,11 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
         const edgePositionIndex = allMatchingEdgeIndices[0];
         edgePositions[edgePositionIndex] = {
           ...edgePositions[edgePositionIndex],
-          key: newEdgeKey
+          key: newEdgeKey,
+          fromname: newEdgeFromname,
+          fromlayer: newEdgeFromlayer,
+          toname: newEdgeToname,
+          tolayer: newEdgeTolayer
         };
         
         if (allMatchingEdgeIndices.length > 1) {
@@ -281,9 +302,8 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
       }
     }
   });
-  
-  //console.log(`${edgesUpdated}個のエッジを更新しました`);
 
+  /*
   const checkRemainingOldKeys = () => {
     const oldNodesRemaining = nodes.value.filter(node => node.key === oldKey);
     // console.log(`nodes内に残っている古いキー '${oldKey}' の数: ${oldNodesRemaining.length}`);
@@ -295,11 +315,9 @@ const updateNodeKey = (oldKey: string, newName: string, newLayer: string) => {
       // console.log("残っている古いキーを持つ位置情報:", oldPositionsRemaining);
     }
   };
-  
-  // 確認を実行
-  // checkRemainingOldKeys();
-  
-  // console.log("更新後のノード:", JSON.stringify(node));
+
+  checkRemainingOldKeys();
+  */
 
   return true;
 };
@@ -497,6 +515,10 @@ const handleFileUpload = (file: File) => {
       });
       let edgePositionsFromFile = data.edgePositions;
       edgePositionsFromFile.forEach((edge: any) => {
+        // すでに同じkeyのエッジが存在する場合は追加しない
+        if (edgePositions.find(e => e.key === edge.key)) {
+          return;
+        }
         if (edge.info) {
           edgePositions.push({ key: edge.key, position: { from: { x: edge.position.from.x, y: edge.position.from.y, z: edge.position.from.z }, to : { x: edge.position.to.x, y: edge.position.to.y, z: edge.position.to.z } }, fromname: edge.fromname, fromlayer: edge.fromlayer, toname: edge.toname, tolayer: edge.tolayer, type: edge.type, info: { direction: edge.info.direction, weight: edge.info.weight } });
         }

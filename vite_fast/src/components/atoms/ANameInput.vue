@@ -78,7 +78,7 @@ export default defineComponent({
     right: 0;
     bottom: 0;
     height: 2px;
-    background-color: c.$blue;
+    background-color: c.$sub_6;
     transform: scaleX(0);
     transition: transform 0.3s ease;
   }

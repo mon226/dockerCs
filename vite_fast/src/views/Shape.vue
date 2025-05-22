@@ -95,7 +95,7 @@
   padding-left: 5vw;
 }
 canvas {
-  border: 2px solid c.$yellow;
+  border: 2px solid c.$sub_3;
   background-color: c.$white;
 }
 .canvas-wrapper {
@@ -196,18 +196,18 @@ td {
 }
 #tableFront {
 	padding: 5px;
-	background: linear-gradient(to right, c.$yellow, c.$green);
+	background: linear-gradient(to right, c.$sub_3, c.$sub_4);
 	max-height: 60vh;
 	overflow-y: overlay;
 }
 #tableTop {
-	background: linear-gradient(to right, c.$yellow, c.$green);
+	background: linear-gradient(to right, c.$sub_3, c.$sub_4);
 	height: 5px;
 	border-radius: 10px 10px 0 0;
 	display: block;
 }
 #tableBottom {
-	background: linear-gradient(to right, c.$yellow, c.$green);
+	background: linear-gradient(to right, c.$sub_3, c.$sub_4);
 	height: 5px;
 	border-radius: 0 0 10px 10px;
 	display: block;
